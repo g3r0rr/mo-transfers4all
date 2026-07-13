@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /hotel
+Disallow: /login
 
 Sitemap: https://mo-transfers4all.gr/sitemap.xml
