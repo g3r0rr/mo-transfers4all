@@ -54,6 +54,12 @@ Deploys automatically via Vercel on push to `main` (see `vercel.json` — it's a
 
 **Analytics:** `src/lib/analytics.js` wraps `window.gtag` so event names/shapes stay consistent (`trackBookingSubmitted`, `trackWhatsAppContact`, etc.). GA4 consent mode is configured directly in `index.html`: analytics/ad storage defaults to denied for EEA/UK/Switzerland visitors and granted elsewhere, and `CookieConsent.jsx` calls `gtag('consent', 'update', ...)` on accept. `trackEvent` calls are safe to fire unconditionally — consent mode drops them silently rather than erroring.
 
+## MCP connector usage
+
+- **Memory:** use the `mem0` connector for persisting/recalling memory on this project. Fall back to the `sentry` connector for bug investigation only if mem0 can't help.
+- **Bug fixing:** use the `sentry` connector to look up errors/issues when debugging.
+- **Infra:** this project has `vercel` (deploys, project/env info, logs) and `supabase` (database, migrations, edge functions, logs, advisors) connectors available — prefer them over asking the user to check dashboards manually.
+
 ## Working in this repo
 
 - This is a single-owner small business site with no CI, no test suite, and no separate staging environment — changes go live on merge to `main`. Be conservative with anything touching the booking form, auth, or the service worker, since those directly affect whether real bookings and admin notifications keep working.
