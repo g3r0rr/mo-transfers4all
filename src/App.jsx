@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import Home from './pages/Home.jsx'
 import DestinationPage from './pages/DestinationPage.jsx'
 import Login from './pages/Login.jsx'
@@ -53,6 +54,7 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Analytics />
+      <SpeedInsights />
     </BrowserRouter>
   )
 }
