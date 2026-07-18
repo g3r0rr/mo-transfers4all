@@ -61,3 +61,15 @@ a { text-decoration: none; }
   transition: opacity 0.6s ease, transform 0.6s ease;
 }
 .reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* Universal "press" feedback. Applies to every native <button> site-wide
+   (public site, admin, hotel, login all share this stylesheet) without
+   needing to touch each component — more specific :active rules defined
+   locally (e.g. WhatsAppButton's main button) still win over this default.
+   .btn-tap is for <a>/<Link> elements styled to look like buttons, which
+   don't get this for free since not every link should feel "pressable". */
+button:active:not(:disabled) { transform: scale(0.95); }
+button { transition: transform 0.12s ease; }
+
+.btn-tap { transition: transform 0.12s ease; }
+.btn-tap:active { transform: scale(0.95); }

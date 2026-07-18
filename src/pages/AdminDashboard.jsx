@@ -387,7 +387,7 @@ export default function AdminDashboard() {
           padding: 0.3rem 0.6rem;
           cursor: pointer;
           color: #7a99b5;
-          transition: background 0.15s, color 0.15s;
+          transition: background 0.15s, color 0.15s, transform 0.12s ease;
         }
 
         .adm-lang-btn.active {
@@ -406,7 +406,7 @@ export default function AdminDashboard() {
           letter-spacing: 0.05em;
           padding: 0.38rem 0.9rem;
           cursor: pointer;
-          transition: background 0.15s, color 0.15s, border-color 0.15s;
+          transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s ease;
           white-space: nowrap;
         }
 
@@ -544,7 +544,7 @@ export default function AdminDashboard() {
           justify-content: center;
           cursor: pointer;
           font-size: 1rem;
-          transition: background 0.15s;
+          transition: background 0.15s, transform 0.12s ease;
         }
 
         .adm-cal-arrow:hover { background: #eef5fb; }
@@ -712,7 +712,7 @@ export default function AdminDashboard() {
           cursor: pointer;
           padding: 0;
           line-height: 1;
-          transition: color 0.15s;
+          transition: color 0.15s, transform 0.12s ease;
         }
 
         .adm-modal-close:hover { color: #0f3460; }
@@ -835,7 +835,7 @@ export default function AdminDashboard() {
           letter-spacing: 0.08em;
           padding: 0.85rem;
           cursor: pointer;
-          transition: background 0.15s;
+          transition: background 0.15s, transform 0.12s ease;
           text-transform: uppercase;
         }
 

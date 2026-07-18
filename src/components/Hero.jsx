@@ -93,7 +93,7 @@ export default function Hero({ lang }) {
         }}>{t.sub}</p>
 
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2.4rem' }}>
-          <a href="#booking" style={{
+          <a href="#booking" className="btn-tap" style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
             background: 'var(--blue-deep)', color: '#fff',
             padding: '0.88rem 1.9rem', borderRadius: '4px',
@@ -106,7 +106,7 @@ export default function Hero({ lang }) {
           >
             {t.cta} →
           </a>
-          <a href={`tel:${t.call.replace(/\s/g,'')}`} style={{
+          <a href={`tel:${t.call.replace(/\s/g,'')}`} className="btn-tap" style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
             border: '1.5px solid var(--border)', color: 'var(--blue-deep)',
             padding: '0.88rem 1.4rem', borderRadius: '4px',
