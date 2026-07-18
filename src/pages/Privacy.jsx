@@ -6,7 +6,7 @@ const en = {
   tag: 'Legal', title: 'Privacy', titleEm: 'Policy',
   updated: 'Last updated: June 2026 · GDPR Compliant',
   keyLabel: 'Core Privacy Commitment',
-  keyText: 'All customer personal data is strictly used for the booking process and is permanently deleted immediately after the completion of the transfer.',
+  keyText: 'All customer personal data is strictly used for the booking process. Identifying details — your name, phone, email, and notes — are automatically and permanently erased within 30 days of your transfer being completed.',
   sections: [
     {
       num: '01', title: 'Data Controller',
@@ -23,18 +23,27 @@ const en = {
       content: 'Your data is processed exclusively to fulfill your transfer booking. The legal basis is the performance of a contract (Article 6(1)(b) GDPR). We do not use your data for marketing, advertising, profiling, resale to third parties, or any purpose other than your requested transfer.',
     },
     {
-      num: '04', title: 'Immediate Deletion Policy',
-      highlight: '🗑️ Your data is permanently deleted immediately upon completion of your transfer.',
+      num: '04', title: 'Automatic Data Erasure',
+      highlight: '🗑️ Your name, phone, email, and notes are automatically and permanently erased within 30 days of your transfer being completed.',
       content: 'This means:',
-      items: ['No booking records are retained after your journey ends', 'No customer database or passenger history is maintained', 'Your contact details are removed from all systems once the service is completed', 'There is no long-term storage of personal data whatsoever'],
+      items: ['Erasure happens automatically — no request needed on your part', 'No long-term customer database or passenger history is built up from your identifying details', 'A minimal trip record (route, date, vehicle) may be kept briefly afterward for driver payment reconciliation, dispute handling, and Greek tax/accounting obligations, but never your name, contact details, or notes', 'You can request earlier erasure at any time — see your GDPR rights below'],
     },
     {
       num: '05', title: 'Data Sharing',
-      content: 'We do not sell, share, or transfer your personal data to any third parties. Your booking information is used solely by MO Transfers4all Athens to coordinate your journey. Booking submissions are transmitted via secure encrypted channels. No third-party CRM or marketing platform stores your personal data. The only third-party tool used is Google Analytics, and only with your consent — see the Cookies section below for details.',
+      content: 'We do not sell your personal data, and we never share it with data brokers or marketing companies. To operate the booking service, a small number of processors handle a limited part of your data on our behalf, strictly for the purposes below:',
+      items: [
+        'Supabase — hosts our booking database (EU-based servers)',
+        'CallMeBot — delivers the WhatsApp alert that notifies our driver of your booking',
+        'Resend — sends your booking confirmation email (website bookings only)',
+        'Google Calendar — creates a reminder on our driver’s calendar ahead of your pickup',
+        'Google Analytics — only with your consent; see Cookies below',
+        'Vercel Analytics & Speed Insights — cookie-free, anonymized site usage and performance data that does not identify you personally',
+      ],
+      after: 'None of these processors are permitted to use your data for their own purposes.',
     },
     {
       num: '06', title: 'Cookies',
-      content: 'Our website uses essential technical cookies necessary for the website to function (storing only your language preference and cookie consent choice — these contain no personal identifying information). With your consent, we also use Google Analytics (GA4) to understand how visitors use our site, such as which pages are viewed and how visitors arrived at the site. Analytics cookies are not set, and no data is sent to Google, unless you click "Accept" on our cookie banner. You can withdraw this consent at any time by clearing your cookies or contacting us. Google may process this data on servers outside the EU/EEA under its own privacy safeguards; see Google\u2019s Privacy Policy for details. We do not use advertising cookies, social media cookies, or pixels.',
+      content: 'Our website uses essential technical cookies necessary for the website to function (storing only your language preference and cookie consent choice — these contain no personal identifying information). With your consent, we also use Google Analytics (GA4) to understand how visitors use our site, such as which pages are viewed and how visitors arrived at the site. Analytics cookies are not set, and no data is sent to Google, unless you click "Accept" on our cookie banner. You can withdraw this consent at any time by clearing your cookies or contacting us. Google may process this data on servers outside the EU/EEA under its own privacy safeguards; see Google\u2019s Privacy Policy for details. We also use Vercel Analytics and Vercel Speed Insights, which are cookie-free by design \u2014 they don\u2019t set any cookie or persistent identifier, so they run without requiring your consent. We do not use advertising cookies, social media cookies, or pixels.',
     },
     {
       num: '07', title: 'Your GDPR Rights',
@@ -58,7 +67,7 @@ const gr = {
   tag: 'Νομικά', title: 'Πολιτική', titleEm: 'Απορρήτου',
   updated: 'Τελευταία ενημέρωση: Ιούνιος 2026 · Συμμόρφωση GDPR',
   keyLabel: 'Βασική Δέσμευση Απορρήτου',
-  keyText: 'Όλα τα προσωπικά δεδομένα των πελατών χρησιμοποιούνται αποκλειστικά για τη διαδικασία της κράτησης και διαγράφονται οριστικά αμέσως μετά την ολοκλήρωση της μεταφοράς.',
+  keyText: 'Όλα τα προσωπικά δεδομένα των πελατών χρησιμοποιούνται αποκλειστικά για τη διαδικασία της κράτησης. Τα στοιχεία ταυτοποίησης — όνομα, τηλέφωνο, email και σημειώσεις — διαγράφονται αυτόματα και οριστικά εντός 30 ημερών από την ολοκλήρωση της μεταφοράς σας.',
   sections: [
     {
       num: '01', title: 'Υπεύθυνος Επεξεργασίας',
@@ -75,18 +84,27 @@ const gr = {
       content: 'Τα δεδομένα σας υποβάλλονται σε επεξεργασία αποκλειστικά για την εκτέλεση της κράτησής σας. Η νομική βάση είναι η εκτέλεση σύμβασης (Άρθρο 6(1)(β) ΓΚΠΔ). Δεν χρησιμοποιούμε τα δεδομένα σας για μάρκετινγκ, διαφήμιση, προφίλ, μεταπώληση σε τρίτους ή οποιοδήποτε άλλο σκοπό.',
     },
     {
-      num: '04', title: 'Πολιτική Άμεσης Διαγραφής',
-      highlight: '🗑️ Τα δεδομένα σας διαγράφονται οριστικά αμέσως μετά την ολοκλήρωση της μεταφοράς σας.',
+      num: '04', title: 'Αυτόματη Διαγραφή Δεδομένων',
+      highlight: '🗑️ Το όνομα, το τηλέφωνο, το email και οι σημειώσεις σας διαγράφονται αυτόματα και οριστικά εντός 30 ημερών από την ολοκλήρωση της μεταφοράς σας.',
       content: 'Αυτό σημαίνει:',
-      items: ['Δεν διατηρούνται αρχεία κράτησης μετά το τέλος του ταξιδιού σας', 'Δεν τηρείται βάση δεδομένων πελατών ή ιστορικό επιβατών', 'Τα στοιχεία επικοινωνίας σας αφαιρούνται από όλα τα συστήματα μόλις ολοκληρωθεί η υπηρεσία', 'Δεν υπάρχει μακροπρόθεσμη αποθήκευση προσωπικών δεδομένων'],
+      items: ['Η διαγραφή γίνεται αυτόματα — δεν χρειάζεται αίτημα από εσάς', 'Δεν δημιουργείται μακροπρόθεσμη βάση δεδομένων πελατών ή ιστορικό επιβατών από τα στοιχεία ταυτοποίησής σας', 'Ένα ελάχιστο αρχείο διαδρομής (διαδρομή, ημερομηνία, όχημα) ενδέχεται να διατηρηθεί για σύντομο διάστημα για λόγους εκκαθάρισης πληρωμής οδηγού, επίλυσης διαφορών και φορολογικών/λογιστικών υποχρεώσεων, ποτέ όμως το όνομα, τα στοιχεία επικοινωνίας ή οι σημειώσεις σας', 'Μπορείτε να ζητήσετε νωρίτερη διαγραφή ανά πάσα στιγμή — δείτε τα δικαιώματά σας ΓΚΠΔ παρακάτω'],
     },
     {
       num: '05', title: 'Κοινοποίηση Δεδομένων',
-      content: 'Δεν πουλάμε, κοινοποιούμε ή μεταφέρουμε τα προσωπικά σας δεδομένα σε τρίτους. Οι πληροφορίες κράτησής σας χρησιμοποιούνται αποκλειστικά από την MO Transfers4all Athens. Κανένα τρίτο μέρος CRM ή πλατφόρμα μάρκετινγκ δεν αποθηκεύει τα προσωπικά σας δεδομένα. Το μόνο εργαλείο τρίτου μέρους που χρησιμοποιείται είναι το Google Analytics, και μόνο με τη συγκατάθεσή σας — δείτε την ενότητα Cookies παρακάτω.',
+      content: 'Δεν πουλάμε τα προσωπικά σας δεδομένα και δεν τα κοινοποιούμε ποτέ σε μεσίτες δεδομένων ή εταιρείες μάρκετινγκ. Για τη λειτουργία της υπηρεσίας κράτησης, ένας μικρός αριθμός συνεργατών επεξεργάζεται μέρος των δεδομένων σας εκ μέρους μας, αυστηρά για τους παρακάτω σκοπούς:',
+      items: [
+        'Supabase — φιλοξενεί τη βάση δεδομένων κρατήσεών μας (servers εντός ΕΕ)',
+        'CallMeBot — αποστέλλει την ειδοποίηση WhatsApp που ενημερώνει τον οδηγό μας για την κράτησή σας',
+        'Resend — αποστέλλει το email επιβεβαίωσης της κράτησής σας (μόνο για κρατήσεις μέσω ιστοσελίδας)',
+        'Google Calendar — δημιουργεί υπενθύμιση στο ημερολόγιο του οδηγού μας πριν την παραλαβή σας',
+        'Google Analytics — μόνο με τη συγκατάθεσή σας· δείτε παρακάτω στην ενότητα Cookies',
+        'Vercel Analytics & Speed Insights — ανώνυμα δεδομένα χρήσης και απόδοσης χωρίς cookies, που δεν σας ταυτοποιούν προσωπικά',
+      ],
+      after: 'Κανένας από αυτούς τους συνεργάτες δεν επιτρέπεται να χρησιμοποιήσει τα δεδομένα σας για δικούς του σκοπούς.',
     },
     {
       num: '06', title: 'Cookies',
-      content: 'Ο ιστότοπός μας χρησιμοποιεί απαραίτητα τεχνικά cookies για τη λειτουργία του (αποθηκεύουν μόνο τη γλωσσική σας προτίμηση και την επιλογή συγκατάθεσης cookies, χωρίς προσωπικά αναγνωριστικά δεδομένα). Με τη συγκατάθεσή σας, χρησιμοποιούμε επίσης το Google Analytics (GA4) για να κατανοούμε πώς οι επισκέπτες χρησιμοποιούν τον ιστότοπό μας, όπως ποιες σελίδες προβάλλονται. Τα cookies ανάλυσης δεν ενεργοποιούνται, και δεν αποστέλλονται δεδομένα στην Google, εκτός εάν επιλέξετε "Αποδοχή" στο banner cookies μας. Μπορείτε να ανακαλέσετε αυτή τη συγκατάθεση ανά πάσα στιγμή διαγράφοντας τα cookies σας ή επικοινωνώντας μαζί μας. Η Google ενδέχεται να επεξεργάζεται αυτά τα δεδομένα σε servers εκτός ΕΕ/ΕΟΧ σύμφωνα με τις δικές της εγγυήσεις απορρήτου. Δεν χρησιμοποιούμε cookies διαφήμισης ή κοινωνικών δικτύων.',
+      content: 'Ο ιστότοπός μας χρησιμοποιεί απαραίτητα τεχνικά cookies για τη λειτουργία του (αποθηκεύουν μόνο τη γλωσσική σας προτίμηση και την επιλογή συγκατάθεσης cookies, χωρίς προσωπικά αναγνωριστικά δεδομένα). Με τη συγκατάθεσή σας, χρησιμοποιούμε επίσης το Google Analytics (GA4) για να κατανοούμε πώς οι επισκέπτες χρησιμοποιούν τον ιστότοπό μας, όπως ποιες σελίδες προβάλλονται. Τα cookies ανάλυσης δεν ενεργοποιούνται, και δεν αποστέλλονται δεδομένα στην Google, εκτός εάν επιλέξετε "Αποδοχή" στο banner cookies μας. Μπορείτε να ανακαλέσετε αυτή τη συγκατάθεση ανά πάσα στιγμή διαγράφοντας τα cookies σας ή επικοινωνώντας μαζί μας. Η Google ενδέχεται να επεξεργάζεται αυτά τα δεδομένα σε servers εκτός ΕΕ/ΕΟΧ σύμφωνα με τις δικές της εγγυήσεις απορρήτου. Χρησιμοποιούμε επίσης το Vercel Analytics και το Vercel Speed Insights, τα οποία λειτουργούν χωρίς cookies εξ ορισμού — δεν αποθηκεύουν κανένα cookie ή μόνιμο αναγνωριστικό, οπότε λειτουργούν χωρίς να απαιτείται η συγκατάθεσή σας. Δεν χρησιμοποιούμε cookies διαφήμισης ή κοινωνικών δικτύων.',
     },
     {
       num: '07', title: 'Τα Δικαιώματά σας ΓΚΠΔ',

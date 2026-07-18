@@ -40,8 +40,8 @@ const en = {
     },
     {
       num: '07', title: 'Data Protection',
-      highlight: '🔒 All customer personal data is strictly used for the booking process and is permanently deleted immediately after the completion of the transfer.',
-      content: 'We comply fully with Regulation (EU) 2016/679 (GDPR). Your booking data is never sold, shared with third parties, or used for any marketing purpose. See our full Privacy Policy for details.',
+      highlight: '🔒 All customer personal data is strictly used for the booking process. Identifying details are automatically erased within 30 days of your transfer being completed.',
+      content: 'We comply fully with Regulation (EU) 2016/679 (GDPR). Your booking data is never sold, shared with third parties for marketing, or used for any purpose beyond your transfer. See our full Privacy Policy for details.',
     },
     {
       num: '08', title: 'Governing Law',
@@ -93,8 +93,8 @@ const gr = {
     },
     {
       num: '07', title: 'Προστασία Δεδομένων',
-      highlight: '🔒 Όλα τα προσωπικά δεδομένα των πελατών χρησιμοποιούνται αποκλειστικά για τη διαδικασία κράτησης και διαγράφονται οριστικά μετά την ολοκλήρωση της μεταφοράς.',
-      content: 'Συμμορφωνόμαστε πλήρως με τον ΓΚΠΔ (ΕΕ) 2016/679. Τα δεδομένα κράτησής σας δεν πωλούνται ποτέ ούτε κοινοποιούνται σε τρίτους.',
+      highlight: '🔒 Όλα τα προσωπικά δεδομένα των πελατών χρησιμοποιούνται αποκλειστικά για τη διαδικασία κράτησης. Τα στοιχεία ταυτοποίησης διαγράφονται αυτόματα εντός 30 ημερών από την ολοκλήρωση της μεταφοράς.',
+      content: 'Συμμορφωνόμαστε πλήρως με τον ΓΚΠΔ (ΕΕ) 2016/679. Τα δεδομένα κράτησής σας δεν πωλούνται ποτέ ούτε κοινοποιούνται σε τρίτους για μάρκετινγκ.',
     },
     {
       num: '08', title: 'Εφαρμοστέο Δίκαιο',
