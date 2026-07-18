@@ -254,11 +254,11 @@ export default function DestinationPage() {
           </div>
           <div className="reveal" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.9rem' }}>
             {others.map(o => (
-              <Link key={o.id} to={`${basePath}/destinations/${o.id}`} style={{
+              <Link key={o.id} to={`${basePath}/destinations/${o.id}`} className="btn-tap" style={{
                 display: 'block', textAlign: 'center', padding: '1rem 0.75rem',
                 border: '1px solid var(--border)', borderRadius: '8px',
                 fontSize: '0.8rem', fontWeight: 600, color: 'var(--blue-deep)',
-                transition: 'border-color 0.2s, background 0.2s'
+                transition: 'border-color 0.2s, background 0.2s, transform 0.12s ease'
               }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--blue-bright)'; e.currentTarget.style.background = 'var(--blue-mist)' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'transparent' }}

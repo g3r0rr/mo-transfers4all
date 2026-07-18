@@ -49,6 +49,7 @@ export default function Destinations({ lang }) {
     return (
       <Link
         to={href}
+        className="btn-tap"
         style={{
           position: 'relative', borderRadius: '10px', overflow: 'hidden',
           cursor: 'pointer', gridColumn: isWide ? 'span 2' : 'span 1',

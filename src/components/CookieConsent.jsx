@@ -151,7 +151,7 @@ export default function CookieConsent({ lang }) {
           font-size: 0.78rem;
           font-weight: 500;
           cursor: pointer;
-          transition: background 0.15s, color 0.15s, border-color 0.15s;
+          transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s ease;
         }
         .cookie-btn-decline:hover {
           background: #eef5fb;

@@ -86,7 +86,7 @@ export default function Navbar({ lang, setLang }) {
               }}>{l.toUpperCase()}</button>
             ))}
           </div>
-          <a href="#booking" className="nav-book-btn" style={{
+          <a href="#booking" className="nav-book-btn btn-tap" style={{
             alignItems: 'center', background: 'var(--blue-deep)', color: '#fff',
             padding: '0.48rem 1.1rem', borderRadius: '4px',
             fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase'
