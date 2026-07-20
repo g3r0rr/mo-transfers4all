@@ -4,19 +4,21 @@ import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import Home from './pages/Home.jsx'
 import DestinationPage from './pages/DestinationPage.jsx'
-import Login from './pages/Login.jsx'
-import Privacy from './pages/Privacy.jsx'
-import Terms from './pages/Terms.jsx'
 import NotFound from './pages/NotFound.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 
-// Lazy-loaded: these dashboards are only ever visited by you and hotel
-// partners, never by regular site visitors, but at full size they were the
-// biggest single contributor to the main JS bundle. Splitting them into
-// their own chunks means the public-facing pages (home, destination pages)
-// no longer have to download this code at all.
+// Lazy-loaded: these are all visited far less often than the homepage
+// (Login/Privacy/Terms rarely, Admin/Hotel only by you and hotel
+// partners), but at full size were still shipped in the main JS bundle
+// on every homepage visit — PageSpeed Insights flags this as "unused
+// JavaScript" since none of this code runs on the page it's testing.
+// Splitting them into their own chunks means public-site visitors no
+// longer download code they'll almost never execute.
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard.jsx'))
 const HotelDashboard = lazy(() => import('./pages/HotelDashboard.jsx'))
+const Login = lazy(() => import('./pages/Login.jsx'))
+const Privacy = lazy(() => import('./pages/Privacy.jsx'))
+const Terms = lazy(() => import('./pages/Terms.jsx'))
 
 function DashboardFallback() {
   return (
@@ -34,9 +36,9 @@ function App() {
         <Route path="/gr" element={<Home />} />
         <Route path="/destinations/:slug" element={<DestinationPage />} />
         <Route path="/gr/destinations/:slug" element={<DestinationPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/terms" element={<Terms />} />
+        <Route path="/login" element={<Suspense fallback={<DashboardFallback />}><Login /></Suspense>} />
+        <Route path="/privacy" element={<Suspense fallback={<DashboardFallback />}><Privacy /></Suspense>} />
+        <Route path="/terms" element={<Suspense fallback={<DashboardFallback />}><Terms /></Suspense>} />
         <Route path="/admin" element={
           <ProtectedRoute requiredRole="admin">
             <Suspense fallback={<DashboardFallback />}>

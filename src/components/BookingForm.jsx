@@ -57,7 +57,7 @@ const translations = {
   }
 }
 
-function AutocompleteInput({ placeholder, value, onChange }) {
+function AutocompleteInput({ id, placeholder, value, onChange }) {
   const [results, setResults] = useState([])
   const [open, setOpen] = useState(false)
   const [focused, setFocused] = useState(false)
@@ -89,6 +89,7 @@ function AutocompleteInput({ placeholder, value, onChange }) {
   return (
     <div style={{ position: 'relative' }}>
       <input
+        id={id}
         type="text" value={value} placeholder={placeholder}
         onChange={handleInput}
         onFocus={() => setFocused(true)}
@@ -229,20 +230,20 @@ export default function BookingForm({ lang, prefillPickup, prefillDropoff }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: 'auto auto', gap: '1.1rem', marginBottom: '1.1rem', alignItems: 'start' }}>
 
               <div style={{ gridRow: 1, gridColumn: 1 }}>
-                <label style={labelStyle}>{t.name}</label>
+                <label style={labelStyle} htmlFor="booking-name">{t.name}</label>
               </div>
               <div style={{ gridRow: 1, gridColumn: 2 }}>
-                <label style={labelStyle}>{t.phone}</label>
+                <label style={labelStyle} htmlFor="booking-phone">{t.phone}</label>
               </div>
 
               <div style={{ gridRow: 2, gridColumn: 1 }}>
-                <input required style={inputStyle('name')} value={form.name} placeholder={t.namePh}
+                <input id="booking-name" required style={inputStyle('name')} value={form.name} placeholder={t.namePh}
                   onChange={e => setForm({...form, name: e.target.value})}
                   onFocus={() => setFocused({...focused, name: true})}
                   onBlur={() => setFocused({...focused, name: false})}/>
               </div>
               <div style={{ gridRow: 2, gridColumn: 2 }}>
-                <input required style={inputStyle('phone')} type="tel" value={form.phone} placeholder={t.phonePh}
+                <input id="booking-phone" required style={inputStyle('phone')} type="tel" value={form.phone} placeholder={t.phonePh}
                   onChange={e => setForm({...form, phone: e.target.value})}
                   onFocus={() => setFocused({...focused, phone: true})}
                   onBlur={() => setFocused({...focused, phone: false})}/>
@@ -252,16 +253,16 @@ export default function BookingForm({ lang, prefillPickup, prefillDropoff }) {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.1rem', marginBottom: '1.1rem' }}>
               <div>
-                <label style={labelStyle}>{t.email}</label>
-                <input required style={inputStyle('email')} type="email" value={form.email} placeholder="your@email.com"
+                <label style={labelStyle} htmlFor="booking-email">{t.email}</label>
+                <input id="booking-email" required style={inputStyle('email')} type="email" value={form.email} placeholder="your@email.com"
                   onChange={e => setForm({...form, email: e.target.value})}
                   onFocus={() => setFocused({...focused, email: true})}
                   onBlur={() => setFocused({...focused, email: false})}/>
               </div>
 
               <div>
-                <label style={labelStyle}>{t.vehicle}</label>
-                <select required style={inputStyle('vehicle')} value={form.vehicle}
+                <label style={labelStyle} htmlFor="booking-vehicle">{t.vehicle}</label>
+                <select id="booking-vehicle" required style={inputStyle('vehicle')} value={form.vehicle}
                   onChange={e => setForm({...form, vehicle: e.target.value})}
                   onFocus={() => setFocused({...focused, vehicle: true})}
                   onBlur={() => setFocused({...focused, vehicle: false})}>
@@ -272,34 +273,34 @@ export default function BookingForm({ lang, prefillPickup, prefillDropoff }) {
               </div>
 
               <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>{t.pickup}</label>
-                <AutocompleteInput placeholder={t.pickupPh} value={form.pickup} onChange={val => setForm({...form, pickup: val})}/>
+                <label style={labelStyle} htmlFor="booking-pickup">{t.pickup}</label>
+                <AutocompleteInput id="booking-pickup" placeholder={t.pickupPh} value={form.pickup} onChange={val => setForm({...form, pickup: val})}/>
               </div>
 
               <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>{t.dropoff}</label>
-                <AutocompleteInput placeholder={t.dropoffPh} value={form.dropoff} onChange={val => setForm({...form, dropoff: val})}/>
+                <label style={labelStyle} htmlFor="booking-dropoff">{t.dropoff}</label>
+                <AutocompleteInput id="booking-dropoff" placeholder={t.dropoffPh} value={form.dropoff} onChange={val => setForm({...form, dropoff: val})}/>
               </div>
 
               <div>
-                <label style={labelStyle}>{t.date}</label>
-                <input required style={inputStyle('date')} type="date" value={form.date}
+                <label style={labelStyle} htmlFor="booking-date">{t.date}</label>
+                <input id="booking-date" required style={inputStyle('date')} type="date" value={form.date}
                   onChange={e => setForm({...form, date: e.target.value})}
                   onFocus={() => setFocused({...focused, date: true})}
                   onBlur={() => setFocused({...focused, date: false})}/>
               </div>
 
               <div>
-                <label style={labelStyle}>{t.time}</label>
-                <input required style={inputStyle('time')} type="time" value={form.time}
+                <label style={labelStyle} htmlFor="booking-time">{t.time}</label>
+                <input id="booking-time" required style={inputStyle('time')} type="time" value={form.time}
                   onChange={e => setForm({...form, time: e.target.value})}
                   onFocus={() => setFocused({...focused, time: true})}
                   onBlur={() => setFocused({...focused, time: false})}/>
               </div>
 
               <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>{t.notes}</label>
-                <input style={inputStyle('notes')} value={form.notes} placeholder={t.notesPh}
+                <label style={labelStyle} htmlFor="booking-notes">{t.notes}</label>
+                <input id="booking-notes" style={inputStyle('notes')} value={form.notes} placeholder={t.notesPh}
                   onChange={e => setForm({...form, notes: e.target.value})}
                   onFocus={() => setFocused({...focused, notes: true})}
                   onBlur={() => setFocused({...focused, notes: false})}/>
