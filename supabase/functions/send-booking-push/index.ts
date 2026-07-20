@@ -32,7 +32,13 @@
 //   GOOGLE_CALENDAR_CLIENT_ID      (OAuth client, from Google Cloud Console)
 //   GOOGLE_CALENDAR_CLIENT_SECRET
 //   GOOGLE_CALENDAR_REFRESH_TOKEN  (obtained once via OAuth consent)
-//   GOOGLE_CALENDAR_ID             (target calendar's email/id, defaults to "primary" if unset)
+//   GOOGLE_CALENDAR_IDS            (comma-separated calendar emails/ids, defaults to "primary"
+//                                   if unset. One OAuth token can write to any calendar the
+//                                   account has been granted "Make changes to events" on, so
+//                                   this can include calendars owned by other people who've
+//                                   shared their calendar with this account — that's how a
+//                                   booking reaches multiple family members without a
+//                                   separate OAuth app/refresh token per person)
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import webpush from 'https://esm.sh/web-push@3.6.7'
@@ -199,7 +205,10 @@ const sendWhatsApp = async (booking: any) => {
 const GOOGLE_CALENDAR_CLIENT_ID = Deno.env.get('GOOGLE_CALENDAR_CLIENT_ID')
 const GOOGLE_CALENDAR_CLIENT_SECRET = Deno.env.get('GOOGLE_CALENDAR_CLIENT_SECRET')
 const GOOGLE_CALENDAR_REFRESH_TOKEN = Deno.env.get('GOOGLE_CALENDAR_REFRESH_TOKEN')
-const GOOGLE_CALENDAR_ID = Deno.env.get('GOOGLE_CALENDAR_ID') || 'primary'
+const GOOGLE_CALENDAR_IDS = (Deno.env.get('GOOGLE_CALENDAR_IDS') || 'primary')
+  .split(',')
+  .map((id) => id.trim())
+  .filter(Boolean)
 const BOOKING_EVENT_DURATION_MINUTES = 30
 
 const getGoogleAccessToken = async () => {
@@ -242,6 +251,23 @@ const toAthensDateTimeStrings = (date: string, time: string) => {
   }
 }
 
+const createCalendarEventOn = async (calendarId: string, accessToken: string, event: unknown) => {
+  const res = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: JSON.stringify(event)
+    }
+  )
+  const data = await res.json()
+  if (!res.ok) console.error(`Google Calendar event creation failed for ${calendarId}:`, data)
+  return { calendarId, ok: res.ok, status: res.status, data }
+}
+
 const createCalendarEvent = async (booking: any) => {
   if (!GOOGLE_CALENDAR_CLIENT_ID || !GOOGLE_CALENDAR_CLIENT_SECRET || !GOOGLE_CALENDAR_REFRESH_TOKEN) {
     console.warn('Google Calendar not configured, skipping calendar sync')
@@ -272,20 +298,19 @@ const createCalendarEvent = async (booking: any) => {
       }
     }
 
-    const res = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(GOOGLE_CALENDAR_ID)}/events`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`
-        },
-        body: JSON.stringify(event)
-      }
+    // One access token can write to every calendar in GOOGLE_CALENDAR_IDS
+    // as long as the account has "Make changes to events" permission on
+    // each — no per-calendar credentials needed, even for calendars owned
+    // by someone else who's shared theirs with this account.
+    const settled = await Promise.allSettled(
+      GOOGLE_CALENDAR_IDS.map((calendarId) => createCalendarEventOn(calendarId, accessToken, event))
     )
-    const data = await res.json()
-    if (!res.ok) console.error('Google Calendar event creation failed:', data)
-    return { ok: res.ok, status: res.status, data }
+    const results = settled.map((r, i) =>
+      r.status === 'fulfilled'
+        ? r.value
+        : { calendarId: GOOGLE_CALENDAR_IDS[i], ok: false, error: String(r.reason) }
+    )
+    return { ok: results.every((r) => r.ok), calendars: results }
   } catch (err) {
     console.error('Google Calendar sync failed:', err)
     return { ok: false, error: String(err) }
