@@ -38,7 +38,7 @@ export default function Footer({ lang }) {
 
   const headingStyle = {
     display: 'block', fontSize: '0.62rem', letterSpacing: '0.2em',
-    textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)',
+    textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)',
     fontWeight: 600, marginBottom: '1rem'
   }
 
@@ -66,11 +66,11 @@ export default function Footer({ lang }) {
               <img src="/logo.jpg" alt="MO" style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.2)' }}/>
               <div>
                 <span style={{ display: 'block', fontFamily: 'Playfair Display, serif', fontSize: '1rem', fontWeight: 600, color: '#fff' }}>MO Transfers4all</span>
-                <span style={{ display: 'block', fontSize: '0.58rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Athens</span>
+                <span style={{ display: 'block', fontSize: '0.58rem', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Athens</span>
               </div>
             </div>
-            <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>{t.desc}</p>
-            <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', marginTop: '0.75rem' }}>{t.payment}</p>
+            <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.8 }}>{t.desc}</p>
+            <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', marginTop: '0.75rem' }}>{t.payment}</p>
 
             {/* Social / contact icons */}
             <div style={{ display: 'flex', gap: '0.6rem', marginTop: '1.15rem' }}>
@@ -158,7 +158,7 @@ export default function Footer({ lang }) {
           display: 'flex', flexWrap: 'wrap', gap: '1rem',
           justifyContent: 'space-between', alignItems: 'center'
         }}>
-          <p style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)' }}>
+          <p style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.6)' }}>
             © {year} Marjus Oruci · MO Transfers4all Athens. {t.rights}
           </p>
           <a href="https://wa.me/306936475451" target="_blank" rel="noopener noreferrer"
