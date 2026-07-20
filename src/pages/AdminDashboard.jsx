@@ -293,8 +293,6 @@ export default function AdminDashboard() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@300;400;500;600&family=Outfit:wght@600;700&display=swap');
-
         * { box-sizing: border-box; }
 
         .adm-page {

@@ -130,7 +130,7 @@ export default function Destinations({ lang }) {
           {rest.map(d => <Card key={d.id} dest={d} isWide={false}/>)}
         </div>
 
-        <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>
+        <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>
           {t.anywhere}
         </p>
       </div>

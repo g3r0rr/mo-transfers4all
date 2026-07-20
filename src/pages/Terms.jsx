@@ -133,7 +133,7 @@ export default function Terms() {
           {t.title} <em style={{ color: '#7ec8f0' }}>{t.titleEm}</em>
         </h1>
         <div style={{ width: '50px', height: '2px', background: 'linear-gradient(90deg,#7ec8f0,transparent)', margin: '1rem auto 0' }}/>
-        <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', marginTop: '0.75rem' }}>{t.updated}</p>
+        <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.6)', marginTop: '0.75rem' }}>{t.updated}</p>
       </div>
 
       <div style={{ maxWidth: '760px', margin: '0 auto', padding: '3rem 1.5rem 5rem' }}>

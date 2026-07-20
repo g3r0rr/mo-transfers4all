@@ -11,6 +11,21 @@
     <link rel="alternate" hreflang="el" href="https://mo-transfers4all.gr/gr" />
     <link rel="alternate" hreflang="x-default" href="https://mo-transfers4all.gr/" />
 
+    <!-- Single consolidated font load for the whole app (public site,
+         admin, hotel, login all share this) — union of every family/weight
+         used anywhere, including Outfit which only AdminDashboard needs.
+         Previously each of those pages' embedded <style> blocks had its
+         own separate @import of a near-duplicate URL, and CSS @import is
+         inherently render-blocking and only discovered after the browser
+         starts parsing the stylesheet that contains it — both add up to
+         real render-blocking latency (PageSpeed flagged ~2s). A <link>
+         here is discovered immediately during HTML parsing, and the
+         preconnect hints below start the connection to both Google Fonts
+         hosts before the browser even requests the stylesheet. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&family=Outfit:wght@600;700&display=swap" />
+
     <!-- Google tag (gtag.js) -->
     <script>
       window.dataLayer = window.dataLayer || [];
