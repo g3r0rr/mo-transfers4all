@@ -36,8 +36,6 @@ export default function Login() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@300;400;500;600&display=swap');
-
         .login-page {
           min-height: 100vh;
           background: linear-gradient(135deg, #eef5fb 0%, #f8fafc 50%, #d6e8f7 100%);
