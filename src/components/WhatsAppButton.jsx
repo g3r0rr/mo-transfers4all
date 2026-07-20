@@ -75,6 +75,9 @@ export default function WhatsAppButton({ lang }) {
           box-shadow: 0 8px 32px rgba(37,211,102,0.22), 0 2px 8px rgba(0,0,0,0.08);
           border-left-color: #1ebe5d;
         }
+        .wa-contact-card:active {
+          transform: scale(0.97);
+        }
         .wa-contact-card:nth-child(1) { animation-delay: 0.05s; }
         .wa-contact-card:nth-child(2) { animation-delay: 0.12s; }
         .wa-contact-card:nth-child(3) { animation-delay: 0.19s; }

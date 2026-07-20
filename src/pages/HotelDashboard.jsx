@@ -151,7 +151,13 @@ export default function HotelDashboard() {
     e.preventDefault()
     setSubmitting(true)
     setMsg(null)
-    const { error } = await supabase.from('bookings').insert([{ ...form, source: 'hotel', status: 'pending', lang }])
+    // Fetched fresh here (rather than relying on the `user` state, which
+    // is set by a separate fire-and-forget effect on mount) so a booking
+    // submitted quickly after page load still gets tagged with the right
+    // owner — created_by is what the "View bookings by role" RLS policy
+    // uses to keep each hotel partner's bookings private from others.
+    const { data: { session } } = await supabase.auth.getSession()
+    const { error } = await supabase.from('bookings').insert([{ ...form, source: 'hotel', status: 'pending', lang, created_by: session?.user?.id }])
     if (error) {
       setMsg({ type: 'error', text: 'Error: ' + error.message })
     } else {
@@ -234,7 +240,7 @@ export default function HotelDashboard() {
           padding: 0.3rem 0.6rem;
           cursor: pointer;
           color: #7a99b5;
-          transition: background 0.15s, color 0.15s;
+          transition: background 0.15s, color 0.15s, transform 0.12s ease;
         }
 
         .htl-lang-btn.active {

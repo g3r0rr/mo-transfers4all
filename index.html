@@ -12,7 +12,6 @@
     <link rel="alternate" hreflang="x-default" href="https://mo-transfers4all.gr/" />
 
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TDXP56E1TG"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -46,6 +45,35 @@
       });
 
       gtag('config', 'G-TDXP56E1TG');
+
+      // The gtag.js script itself is ~180KB and was one of the largest
+      // contributors to initial JS transfer and main-thread blocking
+      // time (per PageSpeed Insights). The dataLayer.push calls above
+      // work immediately without the real script loaded yet — they just
+      // queue — so it's safe to defer fetching gtag.js until the visitor
+      // first interacts with the page (or a few seconds pass, for
+      // visitors who never interact but still stay on the page), instead
+      // of competing with the booking form and hero content for
+      // bandwidth/CPU during first paint.
+      (function () {
+        var loaded = false;
+        var events = ['pointerdown', 'keydown', 'touchstart', 'scroll'];
+        function loadGtagScript() {
+          if (loaded) return;
+          loaded = true;
+          var script = document.createElement('script');
+          script.async = true;
+          script.src = 'https://www.googletagmanager.com/gtag/js?id=G-TDXP56E1TG';
+          document.head.appendChild(script);
+          events.forEach(function (evt) {
+            window.removeEventListener(evt, loadGtagScript);
+          });
+        }
+        events.forEach(function (evt) {
+          window.addEventListener(evt, loadGtagScript, { once: true, passive: true });
+        });
+        setTimeout(loadGtagScript, 4000);
+      })();
     </script>
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />

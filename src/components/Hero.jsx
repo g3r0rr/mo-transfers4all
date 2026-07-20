@@ -48,10 +48,23 @@ const translations = {
 export default function Hero({ lang }) {
   const t = translations[lang]
   const [idx, setIdx] = useState(0)
+  // Every slide used to get its background-image set on mount, which
+  // meant all 18 destination photos (~2MB combined) fetched at once,
+  // competing with each other for bandwidth on the very first paint —
+  // measured as a 15s Largest Contentful Paint on mobile PageSpeed.
+  // Only the current photo plus the one about to appear next need to
+  // actually be loaded; the rest stay unloaded until the carousel
+  // reaches them, one slide ahead of when they're shown.
+  const [loadedIndices, setLoadedIndices] = useState(() => new Set([0, 1 % ALL_PHOTOS.length]))
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setIdx(prev => (prev + 1) % ALL_PHOTOS.length)
+      setIdx(prev => {
+        const next = (prev + 1) % ALL_PHOTOS.length
+        const upcoming = (next + 1) % ALL_PHOTOS.length
+        setLoadedIndices(loaded => (loaded.has(upcoming) ? loaded : new Set(loaded).add(upcoming)))
+        return next
+      })
     }, 3000)
     return () => clearInterval(timer)
   }, [])
@@ -93,7 +106,7 @@ export default function Hero({ lang }) {
         }}>{t.sub}</p>
 
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2.4rem' }}>
-          <a href="#booking" style={{
+          <a href="#booking" className="btn-tap" style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
             background: 'var(--blue-deep)', color: '#fff',
             padding: '0.88rem 1.9rem', borderRadius: '4px',
@@ -106,7 +119,7 @@ export default function Hero({ lang }) {
           >
             {t.cta} →
           </a>
-          <a href={`tel:${t.call.replace(/\s/g,'')}`} style={{
+          <a href={`tel:${t.call.replace(/\s/g,'')}`} className="btn-tap" style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
             border: '1.5px solid var(--border)', color: 'var(--blue-deep)',
             padding: '0.88rem 1.4rem', borderRadius: '4px',
@@ -135,7 +148,7 @@ export default function Hero({ lang }) {
         {ALL_PHOTOS.map((url, i) => (
           <div key={url} style={{
             position: 'absolute', inset: 0,
-            backgroundImage: `url('${url}')`,
+            backgroundImage: loadedIndices.has(i) ? `url('${url}')` : 'none',
             backgroundSize: 'cover', backgroundPosition: 'center',
             opacity: i === idx ? 1 : 0,
             transition: 'opacity 1.2s ease'

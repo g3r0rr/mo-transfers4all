@@ -38,7 +38,7 @@ export default function Footer({ lang }) {
 
   const headingStyle = {
     display: 'block', fontSize: '0.62rem', letterSpacing: '0.2em',
-    textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)',
+    textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)',
     fontWeight: 600, marginBottom: '1rem'
   }
 
@@ -52,7 +52,7 @@ export default function Footer({ lang }) {
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     width: '34px', height: '34px', borderRadius: '50%',
     background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)',
-    color: '#fff', transition: 'background 0.2s, border-color 0.2s'
+    color: '#fff', transition: 'background 0.2s, border-color 0.2s, transform 0.12s ease'
   }
 
   return (
@@ -66,17 +66,17 @@ export default function Footer({ lang }) {
               <img src="/logo.jpg" alt="MO" style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.2)' }}/>
               <div>
                 <span style={{ display: 'block', fontFamily: 'Playfair Display, serif', fontSize: '1rem', fontWeight: 600, color: '#fff' }}>MO Transfers4all</span>
-                <span style={{ display: 'block', fontSize: '0.58rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Athens</span>
+                <span style={{ display: 'block', fontSize: '0.58rem', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Athens</span>
               </div>
             </div>
-            <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>{t.desc}</p>
-            <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', marginTop: '0.75rem' }}>{t.payment}</p>
+            <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.8 }}>{t.desc}</p>
+            <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', marginTop: '0.75rem' }}>{t.payment}</p>
 
             {/* Social / contact icons */}
             <div style={{ display: 'flex', gap: '0.6rem', marginTop: '1.15rem' }}>
               {/* Facebook */}
               <a href="https://www.facebook.com/profile.php?id=61591744370335" target="_blank" rel="noopener noreferrer"
-                aria-label="Facebook" style={iconBtnStyle}
+                aria-label="Facebook" className="btn-tap" style={iconBtnStyle}
                 onMouseEnter={e => { e.currentTarget.style.background = '#7ab3d9'; e.currentTarget.style.borderColor = '#7ab3d9' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)' }}
               >
@@ -85,7 +85,7 @@ export default function Footer({ lang }) {
 
               {/* Instagram */}
               <a href="https://www.instagram.com/mo.transfers4all?igsh=N3p4enhmaHNieG13" target="_blank" rel="noopener noreferrer"
-                aria-label="Instagram" style={iconBtnStyle}
+                aria-label="Instagram" className="btn-tap" style={iconBtnStyle}
                 onMouseEnter={e => { e.currentTarget.style.background = '#7ab3d9'; e.currentTarget.style.borderColor = '#7ab3d9' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)' }}
               >
@@ -94,7 +94,7 @@ export default function Footer({ lang }) {
 
               {/* Email */}
               <a href="mailto:mo.transfers4all@gmail.com"
-                aria-label="Email" style={iconBtnStyle}
+                aria-label="Email" className="btn-tap" style={iconBtnStyle}
                 onMouseEnter={e => { e.currentTarget.style.background = '#7ab3d9'; e.currentTarget.style.borderColor = '#7ab3d9' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)' }}
               >
@@ -103,7 +103,7 @@ export default function Footer({ lang }) {
 
               {/* Map — placeholder pin location until a specific link is provided */}
               <a href="https://maps.google.com/?q=Athens,Greece" target="_blank" rel="noopener noreferrer"
-                aria-label="Map" style={iconBtnStyle}
+                aria-label="Map" className="btn-tap" style={iconBtnStyle}
                 onMouseEnter={e => { e.currentTarget.style.background = '#7ab3d9'; e.currentTarget.style.borderColor = '#7ab3d9' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)' }}
               >
@@ -158,11 +158,11 @@ export default function Footer({ lang }) {
           display: 'flex', flexWrap: 'wrap', gap: '1rem',
           justifyContent: 'space-between', alignItems: 'center'
         }}>
-          <p style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)' }}>
+          <p style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.6)' }}>
             © {year} Marjus Oruci · MO Transfers4all Athens. {t.rights}
           </p>
           <a href="https://wa.me/306936475451" target="_blank" rel="noopener noreferrer"
-            style={{ color: '#7ab3d9', fontSize: '0.72rem', textDecoration: 'none' }}
+            className="btn-tap" style={{ color: '#7ab3d9', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-block' }}
             onClick={() => trackWhatsAppContact(undefined, 'footer')}>
             💬 WhatsApp
           </a>

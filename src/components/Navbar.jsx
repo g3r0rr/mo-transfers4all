@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
 const translations = {
-  en: { book: 'Book Now', fleet: 'Fleet', services: 'Services', prices: 'Rates', destinations: 'Destinations', home: 'Home', portal: 'Portal' },
-  gr: { book: 'Κράτηση', fleet: 'Στόλος', services: 'Υπηρεσίες', prices: 'Τιμές', destinations: 'Προορισμοί', home: 'Αρχική', portal: 'Πύλη' }
+  en: { book: 'Book Now', fleet: 'Fleet', services: 'Services', prices: 'Rates', destinations: 'Destinations', home: 'Home', portal: 'Portal', menu: 'Menu' },
+  gr: { book: 'Κράτηση', fleet: 'Στόλος', services: 'Υπηρεσίες', prices: 'Τιμές', destinations: 'Προορισμοί', home: 'Αρχική', portal: 'Πύλη', menu: 'Μενού' }
 }
 
 export default function Navbar({ lang, setLang }) {
@@ -86,7 +86,7 @@ export default function Navbar({ lang, setLang }) {
               }}>{l.toUpperCase()}</button>
             ))}
           </div>
-          <a href="#booking" className="nav-book-btn" style={{
+          <a href="#booking" className="nav-book-btn btn-tap" style={{
             alignItems: 'center', background: 'var(--blue-deep)', color: '#fff',
             padding: '0.48rem 1.1rem', borderRadius: '4px',
             fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase'
@@ -94,7 +94,10 @@ export default function Navbar({ lang, setLang }) {
           <button onClick={() => setMenuOpen(!menuOpen)} className="nav-burger" style={{
             flexDirection: 'column', gap: '5px',
             background: 'none', border: 'none', cursor: 'pointer', padding: '4px'
-          }}>
+          }}
+            aria-label={t.menu}
+            aria-expanded={menuOpen}
+          >
             {[0,1,2].map(i => <span key={i} style={{ display: 'block', width: '22px', height: '2px', background: 'var(--blue-deep)' }}/>)}
           </button>
         </div>
