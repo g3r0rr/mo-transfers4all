@@ -18,9 +18,13 @@ export default function NotFound() {
   const [lang, setLang] = useState(() => localStorage.getItem('mo-lang') || 'en')
   const t = lang === 'gr' ? gr : en
 
+  // Persist the choice like every other page's language toggle does, so
+  // switching language here isn't forgotten on the next navigation.
+  const changeLang = (l) => { setLang(l); localStorage.setItem('mo-lang', l) }
+
   return (
     <>
-      <Navbar lang={lang} setLang={setLang} />
+      <Navbar lang={lang} setLang={changeLang} />
       <section style={{
         minHeight: '70vh', display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center', textAlign: 'center',

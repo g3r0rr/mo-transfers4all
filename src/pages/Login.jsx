@@ -2,12 +2,41 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
+const translations = {
+  en: {
+    sub: 'Partner Portal',
+    title: 'Sign In',
+    subtitle: 'Enter your credentials to access the booking portal.',
+    email: 'Email',
+    password: 'Password',
+    signIn: 'Sign In',
+    signingIn: 'Signing in…',
+    back: '← Back to website',
+    noAccess: 'Your account does not have access to this portal. Please contact support.',
+  },
+  gr: {
+    sub: 'Πύλη Συνεργατών',
+    title: 'Σύνδεση',
+    subtitle: 'Εισάγετε τα στοιχεία σας για πρόσβαση στην πύλη κρατήσεων.',
+    email: 'Email',
+    password: 'Κωδικός',
+    signIn: 'Σύνδεση',
+    signingIn: 'Σύνδεση…',
+    back: '← Επιστροφή στην ιστοσελίδα',
+    noAccess: 'Ο λογαριασμός σας δεν έχει πρόσβαση σε αυτή την πύλη. Παρακαλώ επικοινωνήστε μαζί μας.',
+  }
+}
+
 export default function Login() {
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState(null)
+  const [lang, setLang]         = useState(() => localStorage.getItem('mo-lang') || 'en')
   const navigate = useNavigate()
+  const t = translations[lang] || translations.en
+
+  const changeLang = (l) => { setLang(l); localStorage.setItem('mo-lang', l) }
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -25,7 +54,7 @@ export default function Login() {
       else if (profile.role === 'hotel') navigate('/hotel')
       else {
         await supabase.auth.signOut()
-        throw new Error('Your account does not have access to this portal. Please contact support.')
+        throw new Error(t.noAccess)
       }
     } catch (err) {
       setError(err.message)
@@ -222,21 +251,40 @@ export default function Login() {
       <div className="login-page">
         <div className="login-wrap">
 
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', border: '1px solid var(--border, #cfe0f0)', borderRadius: '6px', overflow: 'hidden' }}>
+              {['en', 'gr'].map(l => (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => changeLang(l)}
+                  style={{
+                    background: lang === l ? 'var(--blue-deep, #0f3460)' : 'transparent',
+                    color: lang === l ? '#fff' : 'var(--text-light, #7a99b5)',
+                    border: 'none', fontFamily: 'Inter, sans-serif',
+                    fontSize: '0.67rem', fontWeight: 600, letterSpacing: '0.08em',
+                    padding: '0.32rem 0.7rem', cursor: 'pointer'
+                  }}
+                >{l.toUpperCase()}</button>
+              ))}
+            </div>
+          </div>
+
           <div className="login-brand">
             <img src="/logo.jpg" alt="MO Transfers4all" />
             <div className="login-brand-name">MO Transfers4all</div>
-            <div className="login-brand-sub">Partner Portal</div>
+            <div className="login-brand-sub">{t.sub}</div>
           </div>
 
           <div className="login-card">
             <div className="login-card-top" />
             <div className="login-card-body">
-              <h1 className="login-title">Sign In</h1>
-              <p className="login-subtitle">Enter your credentials to access the booking portal.</p>
+              <h1 className="login-title">{t.title}</h1>
+              <p className="login-subtitle">{t.subtitle}</p>
 
               <form onSubmit={handleLogin}>
                 <div className="login-field">
-                  <label className="login-label">Email</label>
+                  <label className="login-label">{t.email}</label>
                   <input
                     className="login-input"
                     type="email"
@@ -248,7 +296,7 @@ export default function Login() {
                 </div>
 
                 <div className="login-field">
-                  <label className="login-label">Password</label>
+                  <label className="login-label">{t.password}</label>
                   <input
                     className="login-input"
                     type="password"
@@ -264,13 +312,13 @@ export default function Login() {
                 )}
 
                 <button className="login-btn" type="submit" disabled={loading}>
-                  {loading ? 'Signing in…' : 'Sign In'}
+                  {loading ? t.signingIn : t.signIn}
                 </button>
               </form>
             </div>
           </div>
 
-          <a href="/" className="login-back">← Back to website</a>
+          <a href="/" className="login-back">{t.back}</a>
         </div>
       </div>
     </>

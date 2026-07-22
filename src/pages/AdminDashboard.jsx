@@ -201,9 +201,25 @@ export default function AdminDashboard() {
       bookingChannel = supabase
         .channel("bookings-realtime")
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "bookings" }, (payload) => {
-          setBookings(prev => [...prev, payload.new])
-          playNotification()
-          showBrowserNotification(payload.new)
+          // Dedupe by id: the 60s poll below can race the realtime event
+          // and fetch the same new row first, which would otherwise append
+          // a duplicate. Only append (and alert) if we haven't seen it.
+          setBookings(prev => {
+            if (prev.some(b => b.id === payload.new.id)) return prev
+            playNotification()
+            showBrowserNotification(payload.new)
+            return [...prev, payload.new]
+          })
+        })
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "bookings" }, (payload) => {
+          // Status/driver changes made on another device (or by the erase
+          // cron) — merge silently, no sound/notification.
+          setBookings(prev => prev.map(b => b.id === payload.new.id ? payload.new : b))
+          setSelectedBooking(prev => prev && prev.id === payload.new.id ? payload.new : prev)
+        })
+        .on("postgres_changes", { event: "DELETE", schema: "public", table: "bookings" }, (payload) => {
+          setBookings(prev => prev.filter(b => b.id !== payload.old.id))
+          setSelectedBooking(prev => prev && prev.id === payload.old.id ? null : prev)
         })
         .subscribe()
 

@@ -3,8 +3,10 @@
 // INSERT into "bookings"). Does four things:
 //   1. Sends a Web Push notification to every subscribed admin device
 //   2. Sends a WhatsApp message via CallMeBot
-//   3. Sends a confirmation email to the customer via Resend, in whichever
-//      language (en/gr) they used on the booking form
+//   3. Sends an acknowledgement email to the customer via Resend, in
+//      whichever language (en/gr) they used on the booking form. Worded as
+//      "received, we'll confirm shortly" (not "confirmed"), to match Terms
+//      section 02 — a booking isn't confirmed until we explicitly confirm.
 //   4. Creates an event on the admin's Google Calendar with a 60-minute-
 //      prior popup reminder, for both website and hotel-portal bookings
 // WhatsApp and email both used to be attempted from the browser, which is
@@ -56,26 +58,28 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
-// Idempotency guard: if this booking id was already processed, skip it.
-// Protects against Supabase retrying a webhook delivery it (incorrectly)
-// thinks failed, which would otherwise send the WhatsApp message twice.
-const alreadyProcessed = async (bookingId: string | undefined) => {
-  if (!bookingId) return false
-  const { data, error } = await supabase
+// Idempotency guard against Supabase retrying a webhook delivery it
+// (incorrectly) thinks failed, which would otherwise double-send the
+// WhatsApp/email/calendar. Done as an atomic insert-first claim rather
+// than check-then-insert: two truly simultaneous retries could both pass
+// a separate "already processed?" read and both proceed, but only one
+// can win the INSERT on booking_notifications_sent's primary key — the
+// loser gets a duplicate-key error and bails. Returns true iff we claimed
+// this booking and should do the sending.
+const claimBooking = async (bookingId: string | undefined): Promise<boolean> => {
+  if (!bookingId) return true // no id to dedupe on — proceed (best effort)
+  const { error } = await supabase
     .from('booking_notifications_sent')
-    .select('booking_id')
-    .eq('booking_id', bookingId)
-    .maybeSingle()
+    .insert({ booking_id: bookingId })
   if (error) {
-    console.error('Idempotency check failed, proceeding anyway:', error)
-    return false
+    // 23505 = unique_violation: someone already claimed it. Any other
+    // error we log but still proceed, so a transient DB hiccup doesn't
+    // silently drop a real booking's notifications.
+    if (error.code === '23505') return false
+    console.error('Idempotency claim failed, proceeding anyway:', error)
+    return true
   }
-  return !!data
-}
-
-const markProcessed = async (bookingId: string | undefined) => {
-  if (!bookingId) return
-  await supabase.from('booking_notifications_sent').insert({ booking_id: bookingId }).select()
+  return true
 }
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
@@ -83,12 +87,12 @@ const RESEND_FROM = Deno.env.get('RESEND_FROM') || 'MO Transfers4all <bookings@m
 
 const emailTemplates = {
   en: (b: any) => ({
-    subject: 'Booking Confirmed — MO Transfers4all',
+    subject: 'Booking Received — MO Transfers4all',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #0f3460;">
-        <h2 style="color: #0f3460;">🚖 Booking Confirmed</h2>
+        <h2 style="color: #0f3460;">🚖 Booking Received</h2>
         <p>Hi ${b.passenger_name || ''},</p>
-        <p>We've confirmed your booking. Here are your trip details:</p>
+        <p>We've received your booking request and will confirm it with you shortly. Here are the details you sent:</p>
         <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
           <tr><td style="padding: 6px 0;"><strong>Pickup:</strong></td><td>${b.pickup || '—'}</td></tr>
           <tr><td style="padding: 6px 0;"><strong>Drop-off:</strong></td><td>${b.dropoff || '—'}</td></tr>
@@ -97,19 +101,19 @@ const emailTemplates = {
           <tr><td style="padding: 6px 0;"><strong>Vehicle:</strong></td><td>${b.vehicle || '—'}</td></tr>
           ${b.notes ? `<tr><td style="padding: 6px 0;"><strong>Notes:</strong></td><td>${b.notes}</td></tr>` : ''}
         </table>
-        <p>We'll be in touch shortly with your driver's details.</p>
+        <p>Once we confirm, we'll be in touch with your driver's details.</p>
         <p>If anything above is incorrect, just reply to this email or contact us on WhatsApp.</p>
         <p style="margin-top: 24px; color: #7a99b5; font-size: 0.85em;">MO Transfers4all — Athens, Greece</p>
       </div>
     `
   }),
   gr: (b: any) => ({
-    subject: 'Επιβεβαίωση Κράτησης — MO Transfers4all',
+    subject: 'Λάβαμε την Κράτησή σας — MO Transfers4all',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #0f3460;">
-        <h2 style="color: #0f3460;">🚖 Η Κράτησή σας Καταχωρήθηκε</h2>
+        <h2 style="color: #0f3460;">🚖 Λάβαμε την Κράτησή σας</h2>
         <p>Γεια σας ${b.passenger_name || ''},</p>
-        <p>Η κράτησή σας έχει επιβεβαιωθεί. Τα στοιχεία της διαδρομής σας:</p>
+        <p>Λάβαμε το αίτημα κράτησής σας και θα το επιβεβαιώσουμε σύντομα. Τα στοιχεία που στείλατε:</p>
         <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
           <tr><td style="padding: 6px 0;"><strong>Παραλαβή:</strong></td><td>${b.pickup || '—'}</td></tr>
           <tr><td style="padding: 6px 0;"><strong>Προορισμός:</strong></td><td>${b.dropoff || '—'}</td></tr>
@@ -118,7 +122,7 @@ const emailTemplates = {
           <tr><td style="padding: 6px 0;"><strong>Όχημα:</strong></td><td>${b.vehicle || '—'}</td></tr>
           ${b.notes ? `<tr><td style="padding: 6px 0;"><strong>Σημειώσεις:</strong></td><td>${b.notes}</td></tr>` : ''}
         </table>
-        <p>Θα επικοινωνήσουμε σύντομα μαζί σας με τα στοιχεία του οδηγού σας.</p>
+        <p>Μόλις επιβεβαιώσουμε, θα επικοινωνήσουμε μαζί σας με τα στοιχεία του οδηγού σας.</p>
         <p>Εάν κάτι παραπάνω είναι λάθος, απαντήστε σε αυτό το email ή επικοινωνήστε μαζί μας στο WhatsApp.</p>
         <p style="margin-top: 24px; color: #7a99b5; font-size: 0.85em;">MO Transfers4all — Αθήνα, Ελλάδα</p>
       </div>
@@ -335,11 +339,10 @@ Deno.serve(async (req) => {
   // actual sending in the background avoids that.
   const work = (async () => {
     try {
-      if (await alreadyProcessed(booking.id)) {
-        console.log('Booking', booking.id, 'already processed, skipping duplicate send')
+      if (!(await claimBooking(booking.id))) {
+        console.log('Booking', booking.id, 'already claimed, skipping duplicate send')
         return
       }
-      await markProcessed(booking.id)
 
       const whatsappResult = await sendWhatsApp(booking)
       const emailResult = await sendConfirmationEmail(booking)
