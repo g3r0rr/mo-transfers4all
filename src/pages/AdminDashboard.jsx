@@ -177,6 +177,10 @@ export default function AdminDashboard() {
   const [lang, setLang]                 = useState(localStorage.getItem('mo-lang') || 'en')
   const [currentUserId, setCurrentUserId] = useState(null)
   const [pushEnabled, setPushEnabled]   = useState(false)
+  // Booking ids we've already played the new-booking alert for — see the
+  // realtime INSERT handler for why this is a ref and not derived from
+  // the bookings state.
+  const alertedIdsRef = useRef(new Set())
 
   const t = T[lang]
 
@@ -196,20 +200,28 @@ export default function AdminDashboard() {
       const { data, error } = await supabase
         .from("bookings").select("*").order("date", { ascending: true })
       if (!error) setBookings(data || [])
+      // Seed the alerted set with everything already on the dashboard so
+      // pre-existing bookings never ding.
+      alertedIdsRef.current = new Set((data || []).map(b => b.id))
       setLoading(false)
 
       bookingChannel = supabase
         .channel("bookings-realtime")
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "bookings" }, (payload) => {
-          // Dedupe by id: the 60s poll below can race the realtime event
-          // and fetch the same new row first, which would otherwise append
-          // a duplicate. Only append (and alert) if we haven't seen it.
-          setBookings(prev => {
-            if (prev.some(b => b.id === payload.new.id)) return prev
+          // Alert exactly once per booking id, tracked in a ref rather
+          // than derived from state: the 60s poll below can fetch a new
+          // row moments before the realtime event arrives, and gating the
+          // sound on "not already in state" would silently skip the alert
+          // for a genuinely new booking. (The poll itself never alerts —
+          // it's a silent fallback — so the ref is only added to here.)
+          if (!alertedIdsRef.current.has(payload.new.id)) {
+            alertedIdsRef.current.add(payload.new.id)
             playNotification()
             showBrowserNotification(payload.new)
-            return [...prev, payload.new]
-          })
+          }
+          // State dedupe stays separate (and side-effect free) so the
+          // poll racing ahead can't produce a duplicate row.
+          setBookings(prev => prev.some(b => b.id === payload.new.id) ? prev : [...prev, payload.new])
         })
         .on("postgres_changes", { event: "UPDATE", schema: "public", table: "bookings" }, (payload) => {
           // Status/driver changes made on another device (or by the erase

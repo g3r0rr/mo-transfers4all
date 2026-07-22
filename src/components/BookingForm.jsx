@@ -248,12 +248,20 @@ export default function BookingForm({ lang, prefillPickup, prefillDropoff }) {
           <form onSubmit={handleSubmit}>
             {/* Honeypot: hidden from real users (and from assistive tech via
                 aria-hidden), so anything that fills it is a bot. Kept out of
-                the layout with position/opacity rather than display:none,
-                since some bots skip display:none fields. */}
+                the layout with off-screen positioning rather than
+                display:none, since some bots skip display:none fields.
+                Deliberately NOT named "website"/"url"/"phone" or anything
+                else in the browser address-autofill vocabulary — Chrome
+                ignores autocomplete="off" for address data, and an
+                autofilled honeypot would silently swallow a real
+                customer's booking (they'd see success, but no booking
+                would exist). Naive bots fill every text input regardless
+                of its name, so a neutral name loses nothing. */}
             <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }}>
-              <label htmlFor="booking-website">Website</label>
+              <label htmlFor="booking-extra-check">Leave this field empty</label>
               <input
-                id="booking-website"
+                id="booking-extra-check"
+                name="booking_extra_check"
                 type="text"
                 tabIndex={-1}
                 autoComplete="off"
