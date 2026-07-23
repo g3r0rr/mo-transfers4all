@@ -138,14 +138,18 @@ const urlBase64ToUint8Array = (base64String) => {
   return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)))
 }
 
+// Returns { ok: true } or { ok: false, reason }. The reason is surfaced
+// in the "Enable Alerts" alert so failures are diagnosable on a phone,
+// where the console isn't visible.
 const subscribeToPush = async (userId) => {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    alert('Push notifications are not supported in this browser.')
-    return false
+    return { ok: false, reason: 'This browser does not support push notifications.' }
   }
 
   const permission = await Notification.requestPermission()
-  if (permission !== 'granted') return false
+  if (permission !== 'granted') {
+    return { ok: false, reason: `Notification permission is "${permission}". Allow notifications for this site/app in your settings, then try again.` }
+  }
 
   try {
     const registration = await navigator.serviceWorker.ready
@@ -159,19 +163,38 @@ const subscribeToPush = async (userId) => {
     }
 
     const subJson = subscription.toJSON()
-
-    const { error } = await supabase.from('push_subscriptions').upsert({
+    const row = {
       user_id: userId,
       endpoint: subJson.endpoint,
       p256dh: subJson.keys.p256dh,
       auth: subJson.keys.auth
-    }, { onConflict: 'endpoint' })
+    }
 
-    if (error) { console.error('Failed to save push subscription:', error); return false }
-    return true
+    // Save it. Prefer an upsert keyed on the endpoint's unique
+    // constraint, but if this project's push_subscriptions table doesn't
+    // have that constraint, Postgres rejects the ON CONFLICT (error
+    // 42P10) and the subscription is silently never saved — which is
+    // exactly the "push never sends" symptom. Fall back to
+    // delete-this-endpoint-then-insert so a missing constraint can't
+    // block push. (RLS scopes the delete to this admin's own rows, and
+    // it targets a single device's endpoint, so other devices'
+    // subscriptions are left intact.)
+    let { error } = await supabase.from('push_subscriptions').upsert(row, { onConflict: 'endpoint' })
+    if (error) {
+      console.warn('Upsert on endpoint failed, falling back to delete+insert:', error)
+      await supabase.from('push_subscriptions').delete().eq('endpoint', subJson.endpoint)
+      const res = await supabase.from('push_subscriptions').insert(row)
+      error = res.error
+    }
+
+    if (error) {
+      console.error('Failed to save push subscription:', error)
+      return { ok: false, reason: `Couldn't save the subscription: ${error.message || error.code || 'unknown database error'}` }
+    }
+    return { ok: true }
   } catch (e) {
     console.error('Push subscription failed:', e)
-    return false
+    return { ok: false, reason: `Subscription failed: ${e?.message || String(e)}` }
   }
 }
 
@@ -256,7 +279,7 @@ export default function AdminDashboard() {
       // subscription is silent (no prompt), so refresh it on every load.
       if ('serviceWorker' in navigator && 'PushManager' in window &&
           'Notification' in window && Notification.permission === 'granted') {
-        subscribeToPush(session.user.id).then(ok => setPushEnabled(ok))
+        subscribeToPush(session.user.id).then(res => setPushEnabled(res.ok))
       }
 
       const { data, error } = await supabase
@@ -957,10 +980,10 @@ export default function AdminDashboard() {
             <button
               className="adm-btn"
               onClick={async () => {
-                const ok = await subscribeToPush(currentUserId)
-                setPushEnabled(ok)
-                if (ok) alert(lang === 'gr' ? '✅ Οι ειδοποιήσεις ενεργοποιήθηκαν!' : '✅ Push notifications enabled!')
-                else alert(lang === 'gr' ? 'Αποτυχία ενεργοποίησης ειδοποιήσεων.' : 'Failed to enable push notifications.')
+                const res = await subscribeToPush(currentUserId)
+                setPushEnabled(res.ok)
+                if (res.ok) alert(lang === 'gr' ? '✅ Οι ειδοποιήσεις ενεργοποιήθηκαν!' : '✅ Push notifications enabled!')
+                else alert((lang === 'gr' ? 'Αποτυχία ενεργοποίησης ειδοποιήσεων.\n\n' : 'Failed to enable push notifications.\n\n') + res.reason)
               }}
             >
               🔔 {pushEnabled ? (lang === 'gr' ? 'Ενεργές Ειδοποιήσεις ✓' : 'Alerts Enabled ✓') : t.enableAlerts}
