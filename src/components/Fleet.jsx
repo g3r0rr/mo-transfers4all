@@ -95,8 +95,14 @@ export default function Fleet({ lang }) {
           <div className="blue-line"/>
         </div>
         <div className="reveal" style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
-          <FleetCard icon="🚖" name={t.taxiName} cap={t.taxiCap} desc={t.taxiDesc} features={t.features1} photo="/taxi-photo.jpg"/>
-          <FleetCard icon="🚐" name={t.vanName} cap={t.vanCap} desc={t.vanDesc} features={t.features2} photo="/van-photo.jpg"/>
+          {/* No photo prop: /taxi-photo.jpg and /van-photo.jpg were never
+              added to public/, so pointing at them just triggered a failed
+              image request (which, under the SPA catch-all rewrite, fetches
+              the whole index.html before failing) on every visit. The card
+              already renders a clean gradient + icon when photo is unset.
+              Add the prop back if real vehicle photos are added later. */}
+          <FleetCard icon="🚖" name={t.taxiName} cap={t.taxiCap} desc={t.taxiDesc} features={t.features1}/>
+          <FleetCard icon="🚐" name={t.vanName} cap={t.vanCap} desc={t.vanDesc} features={t.features2}/>
         </div>
       </div>
     </section>

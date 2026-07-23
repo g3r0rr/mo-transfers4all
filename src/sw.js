@@ -60,6 +60,31 @@ self.addEventListener('push', (event) => {
   event.waitUntil(self.registration.showNotification(title, options))
 })
 
+// Browsers occasionally rotate or expire push subscriptions. Re-subscribe
+// with the same key so the browser-side subscription stays alive; the new
+// endpoint reaches the push_subscriptions table the next time the
+// dashboard is opened (AdminDashboard re-upserts the current subscription
+// on every load when permission is granted) — a service worker has no
+// authenticated Supabase session, so it can't write the row itself.
+// VAPID public key duplicated from AdminDashboard.jsx — keep in sync.
+const VAPID_PUBLIC_KEY = 'BEB_u5S-uAo0vy_e5fTIUSGue8FNQzJ2293An3y2myKNhjkh0PXAEkiqPHBgQ0l11sNmYoRRcnZ8276pD1hzMcM'
+
+const urlBase64ToUint8Array = (base64String) => {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = atob(base64)
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)))
+}
+
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    self.registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    }).catch((e) => console.error('Re-subscribe after pushsubscriptionchange failed:', e))
+  )
+})
+
 // Clicking the notification focuses an open admin tab, or opens a new one.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()

@@ -133,6 +133,15 @@ export default function BookingForm({ lang, prefillPickup, prefillDropoff }) {
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState(null)
   const [focused, setFocused] = useState({})
+  // Anti-spam. Neither of these is a hard security boundary (a script
+  // hitting the Supabase REST endpoint directly bypasses both) — they
+  // just cheaply block the naive form-filling bots that make up the bulk
+  // of real-world spam, without a captcha's friction. If sophisticated
+  // direct-API abuse ever appears, the next step is Cloudflare Turnstile
+  // verified server-side. The DB dedup trigger (migration
+  // 20260719000000_booking_antispam) is the server-side backstop.
+  const honeypotRef = useRef('')      // hidden field; only bots fill it
+  const mountedAt = useRef(Date.now()) // real users take a few seconds to fill the form
 
   useEffect(() => {
     if (prefillPickup || prefillDropoff) {
@@ -156,6 +165,16 @@ export default function BookingForm({ lang, prefillPickup, prefillDropoff }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // Spam checks: honeypot filled, or submitted implausibly fast (< 3s
+    // after mount). Show the normal success message rather than an error
+    // so a bot can't tell it was rejected and adapt.
+    if (honeypotRef.current || (Date.now() - mountedAt.current) < 3000) {
+      setMsg({ type: 'success', text: t.success })
+      setForm({ name: '', phone: '', email: '', pickup: '', dropoff: '', date: '', time: '', vehicle: '', notes: '' })
+      return
+    }
+
     setLoading(true)
     setMsg(null)
 
@@ -227,6 +246,28 @@ export default function BookingForm({ lang, prefillPickup, prefillDropoff }) {
         {/* Form card */}
         <div className="reveal booking-form-grid" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '14px', padding: '2rem 1.75rem', backdropFilter: 'blur(8px)' }}>
           <form onSubmit={handleSubmit}>
+            {/* Honeypot: hidden from real users (and from assistive tech via
+                aria-hidden), so anything that fills it is a bot. Kept out of
+                the layout with off-screen positioning rather than
+                display:none, since some bots skip display:none fields.
+                Deliberately NOT named "website"/"url"/"phone" or anything
+                else in the browser address-autofill vocabulary — Chrome
+                ignores autocomplete="off" for address data, and an
+                autofilled honeypot would silently swallow a real
+                customer's booking (they'd see success, but no booking
+                would exist). Naive bots fill every text input regardless
+                of its name, so a neutral name loses nothing. */}
+            <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }}>
+              <label htmlFor="booking-extra-check">Leave this field empty</label>
+              <input
+                id="booking-extra-check"
+                name="booking_extra_check"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                onChange={e => { honeypotRef.current = e.target.value }}
+              />
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: 'auto auto', gap: '1.1rem', marginBottom: '1.1rem', alignItems: 'start' }}>
 
               <div style={{ gridRow: 1, gridColumn: 1 }}>

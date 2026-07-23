@@ -3,6 +3,15 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { getCurrentUser, signOut } from '../lib/auth'
 
+// iOS never fires beforeinstallprompt — installing there is only possible
+// manually via Safari's Share → Add to Home Screen, so the dashboard shows
+// instructions instead of an install button. (iPadOS 13+ masquerades as
+// macOS in the UA; the maxTouchPoints check catches it.)
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+const isStandalone = () =>
+  window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
+
 function usePWAInstall() {
   const [prompt, setPrompt] = useState(null)
   const [installed, setInstalled] = useState(false)
@@ -20,8 +29,29 @@ function usePWAInstall() {
     link.rel = 'manifest'
     link.href = '/admin-manifest.json'
     if (!existing) document.head.appendChild(link)
-    // Restore on unmount
-    return () => { if (!existing) link.remove(); else link.href = '/manifest.webmanifest' }
+
+    // iOS-specific install metadata, injected here (admin-only) rather
+    // than statically in index.html so an Add to Home Screen of the
+    // public site isn't affected. apple-mobile-web-app-capable is what
+    // makes the installed icon open standalone (no Safari chrome) on
+    // iOS versions/paths that don't honor the manifest's display field.
+    const appleMetas = [
+      ['apple-mobile-web-app-capable', 'yes'],
+      ['mobile-web-app-capable', 'yes'],
+      ['apple-mobile-web-app-status-bar-style', 'default'],
+      ['apple-mobile-web-app-title', 'MO Admin'],
+    ].map(([name, content]) => {
+      const meta = document.createElement('meta')
+      meta.name = name
+      meta.content = content
+      document.head.appendChild(meta)
+      return meta
+    })
+
+    return () => {
+      if (!existing) link.remove(); else link.href = '/manifest.webmanifest'
+      appleMetas.forEach(m => m.remove())
+    }
   }, [])
   useEffect(() => {
     const handler = (e) => { e.preventDefault(); setPrompt(e) }
@@ -36,7 +66,14 @@ function usePWAInstall() {
     if (outcome === 'accepted') setInstalled(true)
     setPrompt(null)
   }
-  return { canInstall: !!prompt && !installed, install, installed }
+  return {
+    canInstall: !!prompt && !installed,
+    install,
+    installed,
+    // Show manual instructions on iOS Safari when not already running as
+    // an installed app.
+    showIOSInstructions: isIOS && !isStandalone(),
+  }
 }
 
 const DRIVERS = [
@@ -71,14 +108,24 @@ const playNotification = () => {
   } catch(e) {}
 }
 
-const showBrowserNotification = (booking) => {
-  if (!('Notification' in window)) return
-  const send = () => new Notification('🚖 New Booking!', {
+const showBrowserNotification = async (booking) => {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return
+  const title = '🚖 New Booking!'
+  const options = {
     body: `${booking.passenger_name} · ${booking.pickup} → ${booking.dropoff}`,
     icon: '/logo.jpg'
-  })
-  if (Notification.permission === 'granted') send()
-  else if (Notification.permission !== 'denied') Notification.requestPermission().then(p => { if (p === 'granted') send() })
+  }
+  // Android Chrome throws "Illegal constructor" for page-created
+  // notifications (new Notification(...) only works on desktop) — they
+  // must go through the service worker registration instead. This was
+  // why phones played the ding but never showed the banner. Fall back
+  // to the constructor only where no SW registration exists (desktop
+  // browsers before the SW finishes registering).
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration()
+    if (reg) { await reg.showNotification(title, options); return }
+  } catch (e) { /* fall through */ }
+  try { new Notification(title, options) } catch (e) { console.error('Notification failed:', e) }
 }
 
 // --- Push notifications (work even when the PWA is fully closed) ---
@@ -145,6 +192,8 @@ const T = {
     installLead: 'Install the app',
     installPrompt: 'add this to your home screen for instant access and booking notifications.',
     installNow: 'Install Now',
+    iosInstallLead: 'Install on iPhone/iPad',
+    iosInstallSteps: 'in Safari, tap the Share button, then "Add to Home Screen". Open the app from your home screen and tap Enable Alerts to get booking notifications (requires iOS 16.4+).',
   },
   gr: {
     title: 'Πίνακας Ελέγχου', total: 'Σύνολο', pending: 'Εκκρεμεί',
@@ -162,6 +211,8 @@ const T = {
     installLead: 'Εγκαταστήστε την εφαρμογή',
     installPrompt: 'προσθέστε την στην αρχική οθόνη για άμεση πρόσβαση και ειδοποιήσεις κρατήσεων.',
     installNow: 'Εγκατάσταση',
+    iosInstallLead: 'Εγκατάσταση σε iPhone/iPad',
+    iosInstallSteps: 'στο Safari, πατήστε το κουμπί Κοινοποίησης και μετά "Προσθήκη στην Αφετηρία". Ανοίξτε την εφαρμογή από την αρχική οθόνη και πατήστε Ειδοποιήσεις για να λαμβάνετε ειδοποιήσεις κρατήσεων (απαιτεί iOS 16.4+).',
   }
 }
 
@@ -177,6 +228,10 @@ export default function AdminDashboard() {
   const [lang, setLang]                 = useState(localStorage.getItem('mo-lang') || 'en')
   const [currentUserId, setCurrentUserId] = useState(null)
   const [pushEnabled, setPushEnabled]   = useState(false)
+  // Booking ids we've already played the new-booking alert for — see the
+  // realtime INSERT handler for why this is a ref and not derived from
+  // the bookings state.
+  const alertedIdsRef = useRef(new Set())
 
   const t = T[lang]
 
@@ -193,17 +248,52 @@ export default function AdminDashboard() {
 
       setCurrentUserId(session.user.id)
 
+      // Push subscriptions rot: browsers rotate/expire endpoints, and the
+      // Edge Function prunes dead ones (404/410) from push_subscriptions.
+      // Without this, the table quietly empties out and closed-app push
+      // stops until someone remembers to press "Enable Alerts" again.
+      // When permission is already granted, re-upserting the current
+      // subscription is silent (no prompt), so refresh it on every load.
+      if ('serviceWorker' in navigator && 'PushManager' in window &&
+          'Notification' in window && Notification.permission === 'granted') {
+        subscribeToPush(session.user.id).then(ok => setPushEnabled(ok))
+      }
+
       const { data, error } = await supabase
         .from("bookings").select("*").order("date", { ascending: true })
       if (!error) setBookings(data || [])
+      // Seed the alerted set with everything already on the dashboard so
+      // pre-existing bookings never ding.
+      alertedIdsRef.current = new Set((data || []).map(b => b.id))
       setLoading(false)
 
       bookingChannel = supabase
         .channel("bookings-realtime")
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "bookings" }, (payload) => {
-          setBookings(prev => [...prev, payload.new])
-          playNotification()
-          showBrowserNotification(payload.new)
+          // Alert exactly once per booking id, tracked in a ref rather
+          // than derived from state: the 60s poll below can fetch a new
+          // row moments before the realtime event arrives, and gating the
+          // sound on "not already in state" would silently skip the alert
+          // for a genuinely new booking. (The poll itself never alerts —
+          // it's a silent fallback — so the ref is only added to here.)
+          if (!alertedIdsRef.current.has(payload.new.id)) {
+            alertedIdsRef.current.add(payload.new.id)
+            playNotification()
+            showBrowserNotification(payload.new)
+          }
+          // State dedupe stays separate (and side-effect free) so the
+          // poll racing ahead can't produce a duplicate row.
+          setBookings(prev => prev.some(b => b.id === payload.new.id) ? prev : [...prev, payload.new])
+        })
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "bookings" }, (payload) => {
+          // Status/driver changes made on another device (or by the erase
+          // cron) — merge silently, no sound/notification.
+          setBookings(prev => prev.map(b => b.id === payload.new.id ? payload.new : b))
+          setSelectedBooking(prev => prev && prev.id === payload.new.id ? payload.new : prev)
+        })
+        .on("postgres_changes", { event: "DELETE", schema: "public", table: "bookings" }, (payload) => {
+          setBookings(prev => prev.filter(b => b.id !== payload.old.id))
+          setSelectedBooking(prev => prev && prev.id === payload.old.id ? null : prev)
         })
         .subscribe()
 
@@ -278,7 +368,7 @@ export default function AdminDashboard() {
     ? ['Κυρ','Δευ','Τρί','Τετ','Πέμ','Παρ','Σάβ']
     : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 
-  const { canInstall, install } = usePWAInstall()
+  const { canInstall, install, showIOSInstructions } = usePWAInstall()
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: '#eef5fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -880,11 +970,20 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        {/* PWA install banner */}
+        {/* PWA install banner (Chrome/Android — driven by beforeinstallprompt) */}
         {canInstall && (
           <div style={{ background: 'var(--blue-deep)', color: '#fff', padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
             <div style={{ fontSize: '0.82rem' }}>📲 <strong>{t.installLead}</strong> — {t.installPrompt}</div>
             <button onClick={install} style={{ background: '#fff', color: 'var(--blue-deep)', border: 'none', borderRadius: '6px', padding: '0.45rem 1.1rem', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{t.installNow}</button>
+          </div>
+        )}
+
+        {/* iOS install instructions — beforeinstallprompt never fires on
+            iOS, so without this there is no hint that installing (and
+            therefore push) is even possible there. */}
+        {showIOSInstructions && (
+          <div style={{ background: 'var(--blue-deep)', color: '#fff', padding: '0.75rem 1.5rem', fontSize: '0.82rem', lineHeight: 1.6 }}>
+            📲 <strong>{t.iosInstallLead}</strong> — {t.iosInstallSteps}
           </div>
         )}
 
