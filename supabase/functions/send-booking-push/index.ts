@@ -99,6 +99,7 @@ const emailTemplates = {
           <tr><td style="padding: 6px 0;"><strong>Date:</strong></td><td>${b.date || '—'}</td></tr>
           <tr><td style="padding: 6px 0;"><strong>Time:</strong></td><td>${b.time || '—'}</td></tr>
           <tr><td style="padding: 6px 0;"><strong>Vehicle:</strong></td><td>${b.vehicle || '—'}</td></tr>
+          ${b.luggage ? `<tr><td style="padding: 6px 0;"><strong>Luggage:</strong></td><td>${b.luggage}</td></tr>` : ''}
           ${b.notes ? `<tr><td style="padding: 6px 0;"><strong>Notes:</strong></td><td>${b.notes}</td></tr>` : ''}
         </table>
         <p>Once we confirm, we'll be in touch with your driver's details.</p>
@@ -120,6 +121,7 @@ const emailTemplates = {
           <tr><td style="padding: 6px 0;"><strong>Ημερομηνία:</strong></td><td>${b.date || '—'}</td></tr>
           <tr><td style="padding: 6px 0;"><strong>Ώρα:</strong></td><td>${b.time || '—'}</td></tr>
           <tr><td style="padding: 6px 0;"><strong>Όχημα:</strong></td><td>${b.vehicle || '—'}</td></tr>
+          ${b.luggage ? `<tr><td style="padding: 6px 0;"><strong>Αποσκευές:</strong></td><td>${b.luggage}</td></tr>` : ''}
           ${b.notes ? `<tr><td style="padding: 6px 0;"><strong>Σημειώσεις:</strong></td><td>${b.notes}</td></tr>` : ''}
         </table>
         <p>Μόλις επιβεβαιώσουμε, θα επικοινωνήσουμε μαζί σας με τα στοιχεία του οδηγού σας.</p>
@@ -180,6 +182,7 @@ const sendWhatsApp = async (booking: any) => {
     `📞 Τηλέφωνο: ${booking.passenger_phone || '—'}\n` +
     `✉️ Email: ${booking.passenger_email || '—'}\n` +
     `🚗 Όχημα: ${booking.vehicle || '—'}\n` +
+    `🧳 Αποσκευές: ${booking.luggage || '—'}\n` +
     `📍 Παραλαβή: ${booking.pickup || '—'}\n` +
     `🏁 Προορισμός: ${booking.dropoff || '—'}\n` +
     `📅 Ημερομηνία: ${booking.date || '—'}\n` +
@@ -293,6 +296,7 @@ const createCalendarEvent = async (booking: any) => {
         `Passenger: ${booking.passenger_name || '—'}\n` +
         `Phone: ${booking.passenger_phone || '—'}\n` +
         `Vehicle: ${booking.vehicle || '—'}\n` +
+        (booking.luggage ? `Luggage: ${booking.luggage}\n` : '') +
         (booking.notes ? `Notes: ${booking.notes}\n` : ''),
       start: { dateTime: startDateTime, timeZone: 'Europe/Athens' },
       end: { dateTime: endDateTime, timeZone: 'Europe/Athens' },
