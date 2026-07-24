@@ -43,8 +43,54 @@ export default function Navbar({ lang, setLang }) {
         @media (max-width: 767px) {
           .nav-desktop-links { display: none; }
           .nav-book-btn { display: none; }
-          .nav-burger { display: flex; }
+          .nav-burger { display: block; }
         }
+
+        /* Burger icon that morphs into an X when the menu opens. The three
+           bars are absolutely positioned so the top/bottom can rotate about
+           the middle to form the cross while the middle bar fades out. */
+        .nav-burger {
+          position: relative;
+          width: 26px; height: 20px;
+          background: none; border: none; cursor: pointer; padding: 0;
+        }
+        .nav-burger span {
+          position: absolute; left: 2px;
+          display: block; width: 22px; height: 2px; border-radius: 2px;
+          background: var(--blue-deep);
+          transition: transform 0.32s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease;
+        }
+        .nav-burger span:nth-child(1) { top: 3px; }
+        .nav-burger span:nth-child(2) { top: 9px; }
+        .nav-burger span:nth-child(3) { top: 15px; }
+        .nav-burger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+        .nav-burger.open span:nth-child(2) { opacity: 0; transform: scaleX(0.3); }
+        .nav-burger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+        /* Mobile menu: stays mounted so it can animate both open AND closed
+           (a conditionally-rendered element can only animate in). It slides
+           down + fades, and the links stagger in behind it. visibility
+           toggles so a closed menu isn't focusable/tabbable. */
+        .nav-menu {
+          position: fixed; top: 68px; left: 0; right: 0;
+          background: #fff; border-bottom: 1px solid var(--border);
+          z-index: 999; box-shadow: 0 8px 32px rgba(15,52,96,0.12);
+          transform: translateY(-14px); opacity: 0; visibility: hidden;
+          transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.24s ease, visibility 0.3s;
+        }
+        .nav-menu.open { transform: translateY(0); opacity: 1; visibility: visible; }
+        .nav-menu > a {
+          opacity: 0; transform: translateX(-12px);
+          transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .nav-menu.open > a { opacity: 1; transform: translateX(0); }
+        .nav-menu.open > a:nth-child(1) { transition-delay: 0.05s; }
+        .nav-menu.open > a:nth-child(2) { transition-delay: 0.09s; }
+        .nav-menu.open > a:nth-child(3) { transition-delay: 0.13s; }
+        .nav-menu.open > a:nth-child(4) { transition-delay: 0.17s; }
+        .nav-menu.open > a:nth-child(5) { transition-delay: 0.21s; }
+        .nav-menu.open > a:nth-child(6) { transition-delay: 0.25s; }
+        .nav-menu.open > a:nth-child(7) { transition-delay: 0.29s; }
       `}</style>
 
       <nav style={navStyle}>
@@ -91,25 +137,18 @@ export default function Navbar({ lang, setLang }) {
             padding: '0.48rem 1.1rem', borderRadius: '4px',
             fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase'
           }}>{t.book}</a>
-          <button onClick={() => setMenuOpen(!menuOpen)} className="nav-burger" style={{
-            flexDirection: 'column', gap: '5px',
-            background: 'none', border: 'none', cursor: 'pointer', padding: '4px'
-          }}
+          <button onClick={() => setMenuOpen(!menuOpen)} className={`nav-burger${menuOpen ? ' open' : ''}`}
             aria-label={t.menu}
             aria-expanded={menuOpen}
           >
-            {[0,1,2].map(i => <span key={i} style={{ display: 'block', width: '22px', height: '2px', background: 'var(--blue-deep)' }}/>)}
+            {[0,1,2].map(i => <span key={i}/>)}
           </button>
         </div>
       </nav>
 
-      {/* Mobile menu */}
-      {menuOpen && (
-        <div style={{
-          position: 'fixed', top: '68px', left: 0, right: 0,
-          background: '#fff', borderBottom: '1px solid var(--border)',
-          zIndex: 999, boxShadow: '0 8px 32px rgba(15,52,96,0.12)'
-        }}>
+      {/* Mobile menu — always mounted, animated via the .open class so it
+          can slide/fade on close as well as open. */}
+      <div className={`nav-menu${menuOpen ? ' open' : ''}`}>
           {[
             { href: lang === 'gr' ? '/gr' : '/', label: t.home, icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
             { href: '#destinations', label: t.destinations, icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg> },
@@ -144,8 +183,7 @@ export default function Navbar({ lang, setLang }) {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
             {t.portal}
           </Link>
-        </div>
-      )}
+      </div>
     </>
   )
 }
