@@ -32,6 +32,7 @@ const translations = {
     error: '❌ An error occurred. Please call us directly.',
     needVehicle: 'Please choose a vehicle.',
     countryLabel: 'Country code',
+    searchCountry: 'Search country…', noCountry: 'No match',
   },
   gr: {
     tag: 'Κρατήσεις', title: 'Κλείστε', titleEm: 'Θέση',
@@ -60,6 +61,7 @@ const translations = {
     error: '❌ Παρουσιάστηκε σφάλμα. Παρακαλώ καλέστε μας.',
     needVehicle: 'Παρακαλώ επιλέξτε όχημα.',
     countryLabel: 'Κωδικός χώρας',
+    searchCountry: 'Αναζήτηση χώρας…', noCountry: 'Καμία αντιστοιχία',
   }
 }
 
@@ -69,8 +71,14 @@ const translations = {
 const VEHICLE_TAXI = 'Taxi (1-4 Επιβάτες)'
 const VEHICLE_VAN = 'Van (5-9 Επιβάτες)'
 
-function CountrySelect({ dial, onChange, label }) {
+function CountrySelect({ dial, onChange, label, searchPh, noMatch }) {
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  // Track the chosen country itself, not just the dial code — several
+  // countries share a code (+1, +7, +44…), so looking up by dial alone
+  // would show the wrong flag/name. Re-sync if the dial is reset externally
+  // (e.g. cleared to the default after a successful submit).
+  const [selected, setSelected] = useState(() => COUNTRIES.find(c => c.d === dial) || COUNTRIES[0])
   const ref = useRef(null)
 
   useEffect(() => {
@@ -79,27 +87,45 @@ function CountrySelect({ dial, onChange, label }) {
     return () => document.removeEventListener('click', onDoc)
   }, [])
 
-  const current = COUNTRIES.find(c => c.d === dial) || COUNTRIES[0]
+  useEffect(() => {
+    if (dial !== selected.d) setSelected(COUNTRIES.find(c => c.d === dial) || selected)
+  }, [dial]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const q = query.trim().toLowerCase()
+  const filtered = q
+    ? COUNTRIES.filter(c => c.n.toLowerCase().includes(q) || c.d.includes(q) || c.d.replace('+', '').includes(q))
+    : COUNTRIES
+
+  const choose = (c) => { setSelected(c); onChange(c.d); setOpen(false); setQuery('') }
 
   return (
     <div className={`bk-country${open ? ' open' : ''}`} ref={ref}>
       <button type="button" className="bk-country-btn"
         onClick={(e) => { e.stopPropagation(); setOpen(o => !o) }}
         aria-label={label} aria-expanded={open}>
-        <span className="bk-cflag">{current.f}</span>
-        <span className="bk-cdial">{current.d}</span>
+        <span className="bk-cflag">{selected.f}</span>
+        <span className="bk-cdial">{selected.d}</span>
         <span className="bk-caret">▾</span>
       </button>
       {open && (
         <div className="bk-country-menu" role="listbox">
-          {COUNTRIES.map(c => (
-            <div key={c.n} className="bk-country-item" role="option" aria-selected={c.d === dial}
-              onClick={() => { onChange(c.d); setOpen(false) }}>
-              <span className="bk-cflag">{c.f}</span>
-              <span className="bk-cname">{c.n}</span>
-              <span className="bk-cdial">{c.d}</span>
-            </div>
-          ))}
+          <input
+            className="bk-country-search"
+            type="text" autoFocus placeholder={searchPh}
+            value={query} onChange={e => setQuery(e.target.value)}
+            onClick={e => e.stopPropagation()}
+          />
+          <div className="bk-country-list">
+            {filtered.map(c => (
+              <div key={c.c} className="bk-country-item" role="option" aria-selected={c.c === selected.c}
+                onClick={() => choose(c)}>
+                <span className="bk-cflag">{c.f}</span>
+                <span className="bk-cname">{c.n}</span>
+                <span className="bk-cdial">{c.d}</span>
+              </div>
+            ))}
+            {filtered.length === 0 && <div className="bk-country-empty">{noMatch}</div>}
+          </div>
         </div>
       )}
     </div>
@@ -289,12 +315,20 @@ export default function BookingForm({ lang, prefillPickup, prefillDropoff }) {
         .bk-country.open .bk-country-btn { border-color: var(--blue-bright); box-shadow: 0 0 0 3px rgba(41,128,185,0.12); }
         .bk-country-menu {
           position: absolute; z-index: 40; top: calc(100% + 6px); left: 0;
-          width: 250px; max-height: 260px; overflow-y: auto; background: #fff;
+          width: 264px; background: #fff;
           border: 1px solid var(--border); border-radius: 14px;
           box-shadow: 0 20px 46px rgba(15,52,96,0.24); padding: 6px;
           animation: bk-pop 0.16s ease both;
         }
         @keyframes bk-pop { from { opacity: 0; transform: translateY(-8px) scale(0.98); } to { opacity: 1; transform: none; } }
+        .bk-country-search {
+          width: 100%; border: 1px solid var(--border); border-radius: 9px;
+          padding: 8px 10px; font-size: 0.84rem; font-family: 'Inter', sans-serif;
+          color: var(--text-dark); outline: none; margin-bottom: 6px;
+        }
+        .bk-country-search:focus { border-color: var(--blue-bright); box-shadow: 0 0 0 3px rgba(41,128,185,0.12); }
+        .bk-country-list { max-height: 236px; overflow-y: auto; }
+        .bk-country-empty { padding: 14px 10px; text-align: center; color: var(--text-light); font-size: 0.82rem; }
         .bk-country-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px; cursor: pointer; font-size: 0.86rem; color: var(--text-dark); }
         .bk-country-item:hover { background: var(--blue-mist); }
         .bk-cflag { font-size: 1.15rem; }
@@ -379,7 +413,7 @@ export default function BookingForm({ lang, prefillPickup, prefillDropoff }) {
               </div>
 
               <div className="bk-phone">
-                <CountrySelect dial={dial} onChange={setDial} label={t.countryLabel}/>
+                <CountrySelect dial={dial} onChange={setDial} label={t.countryLabel} searchPh={t.searchCountry} noMatch={t.noCountry}/>
                 <div className="bk-fl" style={{ flex: 1 }}>
                   <input id="booking-phone" required type="tel" inputMode="tel" placeholder=" " value={form.phone}
                     onChange={e => setForm({ ...form, phone: e.target.value })}/>

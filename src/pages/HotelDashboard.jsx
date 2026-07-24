@@ -5,8 +5,13 @@ import { getCurrentUser, signOut } from '../lib/auth'
 import { useGoogleAutocomplete } from '../lib/useGooglePlaces'
 import { COUNTRIES } from '../lib/countries'
 
-function CountrySelect({ dial, onChange, label }) {
+function CountrySelect({ dial, onChange, label, searchPh, noMatch }) {
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  // Track the chosen country itself, not just the dial code — several
+  // countries share a code (+1, +7, +44…), so a dial-only lookup would show
+  // the wrong flag/name. Re-sync if the dial is reset externally.
+  const [selected, setSelected] = useState(() => COUNTRIES.find(c => c.d === dial) || COUNTRIES[0])
   const ref = useRef(null)
 
   useEffect(() => {
@@ -15,27 +20,45 @@ function CountrySelect({ dial, onChange, label }) {
     return () => document.removeEventListener('click', onDoc)
   }, [])
 
-  const current = COUNTRIES.find(c => c.d === dial) || COUNTRIES[0]
+  useEffect(() => {
+    if (dial !== selected.d) setSelected(COUNTRIES.find(c => c.d === dial) || selected)
+  }, [dial]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const q = query.trim().toLowerCase()
+  const filtered = q
+    ? COUNTRIES.filter(c => c.n.toLowerCase().includes(q) || c.d.includes(q) || c.d.replace('+', '').includes(q))
+    : COUNTRIES
+
+  const choose = (c) => { setSelected(c); onChange(c.d); setOpen(false); setQuery('') }
 
   return (
     <div className={`htl-country${open ? ' open' : ''}`} ref={ref}>
       <button type="button" className="htl-country-btn"
         onClick={(e) => { e.stopPropagation(); setOpen(o => !o) }}
         aria-label={label} aria-expanded={open}>
-        <span className="htl-cflag">{current.f}</span>
-        <span className="htl-cdial">{current.d}</span>
+        <span className="htl-cflag">{selected.f}</span>
+        <span className="htl-cdial">{selected.d}</span>
         <span className="htl-caret">▾</span>
       </button>
       {open && (
         <div className="htl-country-menu" role="listbox">
-          {COUNTRIES.map(c => (
-            <div key={c.n} className="htl-country-item" role="option" aria-selected={c.d === dial}
-              onClick={() => { onChange(c.d); setOpen(false) }}>
-              <span className="htl-cflag">{c.f}</span>
-              <span className="htl-cname">{c.n}</span>
-              <span className="htl-cdial">{c.d}</span>
-            </div>
-          ))}
+          <input
+            className="htl-country-search"
+            type="text" autoFocus placeholder={searchPh}
+            value={query} onChange={e => setQuery(e.target.value)}
+            onClick={e => e.stopPropagation()}
+          />
+          <div className="htl-country-list">
+            {filtered.map(c => (
+              <div key={c.c} className="htl-country-item" role="option" aria-selected={c.c === selected.c}
+                onClick={() => choose(c)}>
+                <span className="htl-cflag">{c.f}</span>
+                <span className="htl-cname">{c.n}</span>
+                <span className="htl-cdial">{c.d}</span>
+              </div>
+            ))}
+            {filtered.length === 0 && <div className="htl-country-empty">{noMatch}</div>}
+          </div>
         </div>
       )}
     </div>
@@ -110,6 +133,7 @@ const T = {
     taxi: 'Taxi — 1 to 4 Passengers', van: 'Van — 5 to 9 Passengers',
     taxiSeg: 'Taxi · 1–4', vanSeg: 'Van · 5–9',
     route: 'Route', needVehicle: 'Please choose a vehicle.', countryLabel: 'Country code',
+    searchCountry: 'Search country…', noCountry: 'No match',
     luggage: 'Luggage', luggageSelect: '— Select —',
     luggageOpts: [ { v: '0', l: 'No luggage' }, { v: '1-2', l: '1–2 bags' }, { v: '3-4', l: '3–4 bags' }, { v: '5+', l: '5+ bags' } ],
     pickup: 'Pickup Location *', pickupPh: 'Airport / Hotel / Address',
@@ -137,6 +161,7 @@ const T = {
     taxi: 'Ταξί — 1 έως 4 Επιβάτες', van: 'Van — 5 έως 9 Επιβάτες',
     taxiSeg: 'Ταξί · 1–4', vanSeg: 'Van · 5–9',
     route: 'Διαδρομή', needVehicle: 'Παρακαλώ επιλέξτε όχημα.', countryLabel: 'Κωδικός χώρας',
+    searchCountry: 'Αναζήτηση χώρας…', noCountry: 'Καμία αντιστοιχία',
     luggage: 'Αποσκευές', luggageSelect: '— Επιλογή —',
     luggageOpts: [ { v: '0', l: 'Χωρίς αποσκευές' }, { v: '1-2', l: '1–2 βαλίτσες' }, { v: '3-4', l: '3–4 βαλίτσες' }, { v: '5+', l: '5+ βαλίτσες' } ],
     pickup: 'Σημείο Παραλαβής *', pickupPh: 'Αεροδρόμιο / Ξενοδοχείο / Διεύθυνση',
@@ -490,10 +515,18 @@ export default function HotelDashboard() {
         .htl-country.open .htl-caret { transform: rotate(180deg); }
         .htl-country.open .htl-country-btn { border-color: #2980b9; background: #fff; box-shadow: 0 0 0 3px rgba(41,128,185,0.12); }
         .htl-country-menu {
-          position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; width: 250px; max-height: 260px;
-          overflow-y: auto; background: #fff; border: 1px solid #cfe0f0; border-radius: 14px;
+          position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; width: 264px;
+          background: #fff; border: 1px solid #cfe0f0; border-radius: 14px;
           box-shadow: 0 20px 46px rgba(15,52,96,0.24); padding: 6px;
         }
+        .htl-country-search {
+          width: 100%; border: 1px solid #cfe0f0; border-radius: 9px;
+          padding: 8px 10px; font-size: 0.84rem; font-family: 'Inter', sans-serif;
+          color: #0d2236; outline: none; margin-bottom: 6px;
+        }
+        .htl-country-search:focus { border-color: #2980b9; box-shadow: 0 0 0 3px rgba(41,128,185,0.12); }
+        .htl-country-list { max-height: 236px; overflow-y: auto; }
+        .htl-country-empty { padding: 14px 10px; text-align: center; color: #7a99b5; font-size: 0.82rem; }
         .htl-country-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px; cursor: pointer; font-size: 0.86rem; color: #0d2236; }
         .htl-country-item:hover { background: #eef5fb; }
         .htl-cflag { font-size: 1.15rem; }
@@ -683,7 +716,7 @@ export default function HotelDashboard() {
                   </div>
 
                   <div className="htl-phone">
-                    <CountrySelect dial={dial} onChange={setDial} label={t.countryLabel} />
+                    <CountrySelect dial={dial} onChange={setDial} label={t.countryLabel} searchPh={t.searchCountry} noMatch={t.noCountry} />
                     <div className="htl-fl" style={{ flex: 1 }}>
                       <input id="htl-phone" required type="tel" inputMode="tel" placeholder=" " {...f('passenger_phone')} />
                       <label htmlFor="htl-phone">{t.phone}</label>
