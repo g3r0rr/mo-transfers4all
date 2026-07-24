@@ -99,6 +99,7 @@ const emailTemplates = {
           <tr><td style="padding: 6px 0;"><strong>Date:</strong></td><td>${b.date || '—'}</td></tr>
           <tr><td style="padding: 6px 0;"><strong>Time:</strong></td><td>${b.time || '—'}</td></tr>
           <tr><td style="padding: 6px 0;"><strong>Vehicle:</strong></td><td>${b.vehicle || '—'}</td></tr>
+          ${b.luggage ? `<tr><td style="padding: 6px 0;"><strong>Luggage:</strong></td><td>${b.luggage}</td></tr>` : ''}
           ${b.notes ? `<tr><td style="padding: 6px 0;"><strong>Notes:</strong></td><td>${b.notes}</td></tr>` : ''}
         </table>
         <p>Once we confirm, we'll be in touch with your driver's details.</p>
@@ -120,6 +121,7 @@ const emailTemplates = {
           <tr><td style="padding: 6px 0;"><strong>Ημερομηνία:</strong></td><td>${b.date || '—'}</td></tr>
           <tr><td style="padding: 6px 0;"><strong>Ώρα:</strong></td><td>${b.time || '—'}</td></tr>
           <tr><td style="padding: 6px 0;"><strong>Όχημα:</strong></td><td>${b.vehicle || '—'}</td></tr>
+          ${b.luggage ? `<tr><td style="padding: 6px 0;"><strong>Αποσκευές:</strong></td><td>${b.luggage}</td></tr>` : ''}
           ${b.notes ? `<tr><td style="padding: 6px 0;"><strong>Σημειώσεις:</strong></td><td>${b.notes}</td></tr>` : ''}
         </table>
         <p>Μόλις επιβεβαιώσουμε, θα επικοινωνήσουμε μαζί σας με τα στοιχεία του οδηγού σας.</p>
@@ -180,6 +182,7 @@ const sendWhatsApp = async (booking: any) => {
     `📞 Τηλέφωνο: ${booking.passenger_phone || '—'}\n` +
     `✉️ Email: ${booking.passenger_email || '—'}\n` +
     `🚗 Όχημα: ${booking.vehicle || '—'}\n` +
+    `🧳 Αποσκευές: ${booking.luggage || '—'}\n` +
     `📍 Παραλαβή: ${booking.pickup || '—'}\n` +
     `🏁 Προορισμός: ${booking.dropoff || '—'}\n` +
     `📅 Ημερομηνία: ${booking.date || '—'}\n` +
@@ -284,16 +287,24 @@ const createCalendarEvent = async (booking: any) => {
   try {
     const accessToken = await getGoogleAccessToken()
     const { startDateTime, endDateTime } = toAthensDateTimeStrings(booking.date, booking.time)
-    const sourceLabel = booking.source === 'hotel' ? '🏨 Hotel' : '🌐 Website'
+    // Calendar events are for the drivers/admin (all Greek), so this content
+    // is always Greek regardless of the language the customer booked in.
+    const sourceLabel = booking.source === 'hotel' ? '🏨 Κράτηση μέσω Ξενοδοχείου' : '🌐 Κράτηση μέσω Ιστότοπου'
+    const vehicleEmoji = (booking.vehicle || '').startsWith('Van') ? '🚐' : '🚕'
 
     const event = {
-      summary: `🚖 ${booking.pickup || '—'} → ${booking.dropoff || '—'} (${booking.passenger_name || 'Passenger'})`,
+      summary: `${vehicleEmoji} ${booking.pickup || '—'} → ${booking.dropoff || '—'} · ${booking.passenger_name || 'Επιβάτης'}`,
       description:
-        `${sourceLabel} booking\n` +
-        `Passenger: ${booking.passenger_name || '—'}\n` +
-        `Phone: ${booking.passenger_phone || '—'}\n` +
-        `Vehicle: ${booking.vehicle || '—'}\n` +
-        (booking.notes ? `Notes: ${booking.notes}\n` : ''),
+        `${sourceLabel}\n` +
+        `━━━━━━━━━━━━━━━\n` +
+        `👤 Επιβάτης: ${booking.passenger_name || '—'}\n` +
+        `📞 Τηλέφωνο: ${booking.passenger_phone || '—'}\n` +
+        (booking.passenger_email ? `✉️ Email: ${booking.passenger_email}\n` : '') +
+        `🚗 Όχημα: ${booking.vehicle || '—'}\n` +
+        (booking.luggage ? `🧳 Αποσκευές: ${booking.luggage}\n` : '') +
+        `📍 Παραλαβή: ${booking.pickup || '—'}\n` +
+        `🏁 Προορισμός: ${booking.dropoff || '—'}\n` +
+        (booking.notes ? `📝 Σημειώσεις: ${booking.notes}\n` : ''),
       start: { dateTime: startDateTime, timeZone: 'Europe/Athens' },
       end: { dateTime: endDateTime, timeZone: 'Europe/Athens' },
       reminders: {
@@ -319,6 +330,16 @@ const createCalendarEvent = async (booking: any) => {
     console.error('Google Calendar sync failed:', err)
     return { ok: false, error: String(err) }
   }
+}
+
+// Compact display helpers for the push notification. booking.time arrives
+// from the DB as "HH:MM:SS" and booking.date as "YYYY-MM-DD"; trim the time
+// to "HH:MM" and reformat the date to "DD/MM" so the notification body stays
+// short and readable on a phone.
+const fmtTime = (t: string | undefined) => (t || '').slice(0, 5)
+const fmtDate = (d: string | undefined) => {
+  const [y, m, day] = (d || '').slice(0, 10).split('-')
+  return day && m ? `${day}/${m}` : (d || '')
 }
 
 Deno.serve(async (req) => {
@@ -353,9 +374,18 @@ Deno.serve(async (req) => {
 
       let sent = 0, failed = 0
       if (subs && subs.length > 0) {
+        // Greek, admin-facing. A multi-line body so the driver sees who,
+        // when, where and which vehicle at a glance without opening the app.
+        const notifTitle = booking.source === 'hotel'
+          ? '🏨 Νέα Κράτηση (Ξενοδοχείο)'
+          : '🚖 Νέα Κράτηση'
+        const notifBody =
+          `👤 ${booking.passenger_name || 'Νέος επιβάτης'} · 📅 ${fmtDate(booking.date)} ${fmtTime(booking.time)}\n` +
+          `📍 ${booking.pickup || '—'} → ${booking.dropoff || '—'}\n` +
+          `🚗 ${booking.vehicle || '—'}${booking.luggage ? ` · 🧳 ${booking.luggage}` : ''}`
         const notificationPayload = JSON.stringify({
-          title: '🚖 New Booking — MO Transfers4all',
-          body: `${booking.passenger_name || 'New passenger'} · ${booking.pickup || ''} → ${booking.dropoff || ''}`,
+          title: `${notifTitle} — MO Transfers4all`,
+          body: notifBody,
           url: '/admin',
           tag: 'booking-' + (booking.id || Date.now())
         })

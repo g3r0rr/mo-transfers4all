@@ -28,6 +28,14 @@ body {
 
 a { text-decoration: none; }
 
+/* Kill the translucent blue/grey box mobile browsers (Android Chrome in
+   particular) flash over a tapped link or button. tap-highlight-color is
+   inherited, so setting it once on <html> covers every interactive
+   element. We provide our own press feedback (the scale below), so the
+   native highlight only ever read as a rendering bug. Keyboard :focus
+   outlines are a separate property and stay intact for accessibility. */
+html { -webkit-tap-highlight-color: transparent; }
+
 .container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
 
 .section-tag {

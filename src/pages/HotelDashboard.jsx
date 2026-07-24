@@ -3,8 +3,46 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { getCurrentUser, signOut } from '../lib/auth'
 import { useGoogleAutocomplete } from '../lib/useGooglePlaces'
+import { COUNTRIES } from '../lib/countries'
 
-function AutocompleteInput({ placeholder, value, onChange }) {
+function CountrySelect({ dial, onChange, label }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('click', onDoc)
+    return () => document.removeEventListener('click', onDoc)
+  }, [])
+
+  const current = COUNTRIES.find(c => c.d === dial) || COUNTRIES[0]
+
+  return (
+    <div className={`htl-country${open ? ' open' : ''}`} ref={ref}>
+      <button type="button" className="htl-country-btn"
+        onClick={(e) => { e.stopPropagation(); setOpen(o => !o) }}
+        aria-label={label} aria-expanded={open}>
+        <span className="htl-cflag">{current.f}</span>
+        <span className="htl-cdial">{current.d}</span>
+        <span className="htl-caret">▾</span>
+      </button>
+      {open && (
+        <div className="htl-country-menu" role="listbox">
+          {COUNTRIES.map(c => (
+            <div key={c.n} className="htl-country-item" role="option" aria-selected={c.d === dial}
+              onClick={() => { onChange(c.d); setOpen(false) }}>
+              <span className="htl-cflag">{c.f}</span>
+              <span className="htl-cname">{c.n}</span>
+              <span className="htl-cdial">{c.d}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AutocompleteInput({ id, label, value, onChange }) {
   const [results, setResults] = useState([])
   const [open, setOpen]       = useState(false)
   const timer = useRef(null)
@@ -24,35 +62,27 @@ function AutocompleteInput({ placeholder, value, onChange }) {
   }
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="htl-fl" style={{ position: 'relative' }}>
       <input
+        id={id}
         type="text"
         value={value}
-        placeholder={placeholder}
+        placeholder=" "
+        autoComplete="off"
+        required
         onChange={handleInput}
         onBlur={() => setTimeout(() => setOpen(false), 200)}
-        className="htl-input"
       />
+      <label htmlFor={id}>{label}</label>
       {open && results.length > 0 && (
-        <div style={{
-          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 5000,
-          background: '#fff', border: '1.5px solid #cfe0f0', borderTop: 'none',
-          borderRadius: '0 0 8px 8px', maxHeight: '210px', overflowY: 'auto',
-          boxShadow: '0 8px 24px rgba(15,52,96,0.12)'
-        }}>
+        <div className="htl-ac-menu">
           {results.map((f, i) => {
             const main = f.structured_formatting.main_text
             const sub  = f.structured_formatting.secondary_text
             return (
-              <div
-                key={i}
-                onMouseDown={() => { onChange(f.description); setOpen(false) }}
-                style={{ padding: '0.7rem 1rem', cursor: 'pointer', borderBottom: '1px solid #eef5fb', transition: 'background 0.1s' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#eef5fb'}
-                onMouseLeave={e => e.currentTarget.style.background = '#fff'}
-              >
-                <div style={{ fontWeight: 500, fontSize: '0.82rem', color: '#0d2236' }}>📍 {main}</div>
-                <div style={{ fontSize: '0.7rem', color: '#7a99b5', marginTop: '1px' }}>{sub}</div>
+              <div key={i} className="htl-ac-item" onMouseDown={() => { onChange(f.description); setOpen(false) }}>
+                <div className="htl-ac-main">📍 {main}</div>
+                <div className="htl-ac-sub">{sub}</div>
               </div>
             )
           })}
@@ -78,6 +108,10 @@ const T = {
     email: 'Email', emailPh: 'passenger@email.com',
     vehicle: 'Vehicle *', selectVehicle: '— Select vehicle —',
     taxi: 'Taxi — 1 to 4 Passengers', van: 'Van — 5 to 9 Passengers',
+    taxiSeg: 'Taxi · 1–4', vanSeg: 'Van · 5–9',
+    route: 'Route', needVehicle: 'Please choose a vehicle.', countryLabel: 'Country code',
+    luggage: 'Luggage', luggageSelect: '— Select —',
+    luggageOpts: [ { v: '0', l: 'No luggage' }, { v: '1-2', l: '1–2 bags' }, { v: '3-4', l: '3–4 bags' }, { v: '5+', l: '5+ bags' } ],
     pickup: 'Pickup Location *', pickupPh: 'Airport / Hotel / Address',
     dropoff: 'Drop-off Location *', dropoffPh: 'Destination',
     date: 'Date *', time: 'Time *',
@@ -101,6 +135,10 @@ const T = {
     email: 'Email', emailPh: 'epibatis@email.com',
     vehicle: 'Όχημα *', selectVehicle: '— Επιλέξτε όχημα —',
     taxi: 'Ταξί — 1 έως 4 Επιβάτες', van: 'Van — 5 έως 9 Επιβάτες',
+    taxiSeg: 'Ταξί · 1–4', vanSeg: 'Van · 5–9',
+    route: 'Διαδρομή', needVehicle: 'Παρακαλώ επιλέξτε όχημα.', countryLabel: 'Κωδικός χώρας',
+    luggage: 'Αποσκευές', luggageSelect: '— Επιλογή —',
+    luggageOpts: [ { v: '0', l: 'Χωρίς αποσκευές' }, { v: '1-2', l: '1–2 βαλίτσες' }, { v: '3-4', l: '3–4 βαλίτσες' }, { v: '5+', l: '5+ βαλίτσες' } ],
     pickup: 'Σημείο Παραλαβής *', pickupPh: 'Αεροδρόμιο / Ξενοδοχείο / Διεύθυνση',
     dropoff: 'Σημείο Προορισμού *', dropoffPh: 'Προορισμός',
     date: 'Ημερομηνία *', time: 'Ώρα *',
@@ -127,8 +165,9 @@ export default function HotelDashboard() {
   const [form, setForm] = useState({
     passenger_name: '', passenger_phone: '', passenger_email: '',
     pickup: '', dropoff: '', date: '', time: '',
-    vehicle: '', notes: '', flight_number: ''
+    vehicle: '', luggage: '', notes: '', flight_number: ''
   })
+  const [dial, setDial] = useState('+30')
   const [lang, setLang] = useState(localStorage.getItem('mo-lang') || 'en')
 
   const t = T[lang]
@@ -149,6 +188,14 @@ export default function HotelDashboard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // Vehicle is a segmented control, not a native <select required>, so
+    // validate it ourselves before hitting the network.
+    if (!form.vehicle) {
+      setMsg({ type: 'error', text: t.needVehicle })
+      return
+    }
+
     setSubmitting(true)
     setMsg(null)
     // Fetched fresh here (rather than relying on the `user` state, which
@@ -157,7 +204,14 @@ export default function HotelDashboard() {
     // owner — created_by is what the "View bookings by role" RLS policy
     // uses to keep each hotel partner's bookings private from others.
     const { data: { session } } = await supabase.auth.getSession()
-    const { error } = await supabase.from('bookings').insert([{ ...form, source: 'hotel', status: 'pending', lang, created_by: session?.user?.id }])
+    const { error } = await supabase.from('bookings').insert([{
+      ...form,
+      // Prepend the selected country dial code so the stored number is
+      // dialable as-is (e.g. "+30 6936475451").
+      passenger_phone: `${dial} ${form.passenger_phone}`.trim(),
+      luggage: form.luggage || null,
+      source: 'hotel', status: 'pending', lang, created_by: session?.user?.id
+    }])
     if (error) {
       setMsg({ type: 'error', text: 'Error: ' + error.message })
     } else {
@@ -167,7 +221,8 @@ export default function HotelDashboard() {
       // was removed from here because browsers can't read CallMeBot's
       // response due to CORS, and it also hardcoded the API key.
       setMsg({ type: 'success', text: '✅ Booking submitted successfully.' })
-      setForm({ passenger_name: '', passenger_phone: '', passenger_email: '', pickup: '', dropoff: '', date: '', time: '', vehicle: '', notes: '', flight_number: '' })
+      setForm({ passenger_name: '', passenger_phone: '', passenger_email: '', pickup: '', dropoff: '', date: '', time: '', vehicle: '', luggage: '', notes: '', flight_number: '' })
+      setDial('+30')
       fetchBookings()
     }
     setSubmitting(false)
@@ -399,6 +454,70 @@ export default function HotelDashboard() {
           box-shadow: 0 0 0 3px rgba(41,128,185,0.12);
         }
 
+        /* ── Floating-label fields (match the public booking form) ── */
+        .htl-fl { position: relative; }
+        .htl-fl > input, .htl-fl > select, .htl-country-btn {
+          width: 100%; background: #f4f8fc; border: 1.5px solid #cfe0f0; border-radius: 9px;
+          color: #0d2236; font-family: 'Inter', sans-serif; font-size: 0.88rem;
+          padding: 1.3rem 1rem 0.5rem; min-height: 54px; outline: none;
+          transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+        }
+        .htl-fl > select {
+          cursor: pointer; appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%237a99b5' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+          background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem;
+        }
+        .htl-fl > label {
+          position: absolute; left: 1rem; top: 1rem; color: #7a99b5; font-size: 0.88rem;
+          pointer-events: none; transition: top 0.16s, font-size 0.16s, color 0.16s, letter-spacing 0.16s;
+        }
+        .htl-fl > input:focus ~ label,
+        .htl-fl > input:not(:placeholder-shown) ~ label,
+        .htl-fl.htl-always > label {
+          top: 0.4rem; font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700; color: #2980b9;
+        }
+        .htl-fl > input:focus, .htl-fl > select:focus {
+          border-color: #2980b9; background: #fff; box-shadow: 0 0 0 3px rgba(41,128,185,0.12);
+        }
+
+        /* Country-code picker */
+        .htl-phone { display: flex; gap: 10px; }
+        .htl-country { position: relative; flex: 0 0 auto; }
+        .htl-country-btn { width: auto; display: flex; align-items: center; gap: 7px; font-weight: 600; cursor: pointer; white-space: nowrap; padding: 1rem; }
+        .htl-country .htl-cdial { font-weight: 700; color: #0d2236; font-variant-numeric: tabular-nums; }
+        .htl-caret { font-size: 0.6rem; opacity: 0.6; transition: transform 0.2s; }
+        .htl-country.open .htl-caret { transform: rotate(180deg); }
+        .htl-country.open .htl-country-btn { border-color: #2980b9; background: #fff; box-shadow: 0 0 0 3px rgba(41,128,185,0.12); }
+        .htl-country-menu {
+          position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; width: 250px; max-height: 260px;
+          overflow-y: auto; background: #fff; border: 1px solid #cfe0f0; border-radius: 14px;
+          box-shadow: 0 20px 46px rgba(15,52,96,0.24); padding: 6px;
+        }
+        .htl-country-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px; cursor: pointer; font-size: 0.86rem; color: #0d2236; }
+        .htl-country-item:hover { background: #eef5fb; }
+        .htl-cflag { font-size: 1.15rem; }
+        .htl-country-item .htl-cname { flex: 1; color: #3a5a78; }
+
+        /* Address autocomplete dropdown */
+        .htl-ac-menu { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 5000; background: #fff; border: 1px solid #cfe0f0; border-radius: 10px; max-height: 210px; overflow-y: auto; box-shadow: 0 12px 30px rgba(15,52,96,0.16); }
+        .htl-ac-item { padding: 0.7rem 1rem; cursor: pointer; border-bottom: 1px solid #eef5fb; }
+        .htl-ac-item:last-child { border-bottom: none; }
+        .htl-ac-item:hover { background: #eef5fb; }
+        .htl-ac-main { font-weight: 500; font-size: 0.82rem; color: #0d2236; }
+        .htl-ac-sub { font-size: 0.7rem; color: #7a99b5; margin-top: 1px; }
+
+        /* Connected route + segmented vehicle */
+        .htl-caplabel { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #3a5a78; margin: 0 0 9px; }
+        .htl-route { position: relative; padding-left: 28px; }
+        .htl-route:before { content: ""; position: absolute; left: 7px; top: 27px; bottom: 27px; width: 2px; background: linear-gradient(#2980b9, #7ec8f0); }
+        .htl-pin { position: absolute; left: 0; width: 16px; height: 16px; border-radius: 50%; border: 3px solid #2980b9; background: #fff; z-index: 1; }
+        .htl-pin.p1 { top: 19px; }
+        .htl-pin.p2 { bottom: 19px; border-color: #7ec8f0; background: #7ec8f0; }
+        .htl-route .htl-fl + .htl-fl { margin-top: 13px; }
+        .htl-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .htl-seg-opt { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.84rem; border-radius: 11px; padding: 13px 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; background: #eef5fb; border: 1.5px solid #dbe7f3; color: #1a5276; transition: background 0.16s, border-color 0.16s, color 0.16s, box-shadow 0.16s; }
+        .htl-seg-opt.active { background: #2980b9; border-color: #2980b9; color: #fff; box-shadow: 0 6px 16px rgba(41,128,185,0.28); }
+
         .htl-full { grid-column: 1 / -1; }
 
         .htl-submit-btn {
@@ -557,66 +676,71 @@ export default function HotelDashboard() {
               <form onSubmit={handleSubmit}>
                 <div className="htl-form-grid">
 
-                  <div className="htl-field">
-                    <label className="htl-label">{t.passengerName}</label>
-                    <input className="htl-input" required placeholder={t.passengerNamePh} {...f('passenger_name')} />
+                  <div className="htl-fl">
+                    <input id="htl-name" required placeholder=" " {...f('passenger_name')} />
+                    <label htmlFor="htl-name">{t.passengerName}</label>
                   </div>
 
-                  <div className="htl-field">
-                    <label className="htl-label">{t.phone}</label>
-                    <input className="htl-input" required type="tel" placeholder={t.phonePh} {...f('passenger_phone')} />
+                  <div className="htl-phone">
+                    <CountrySelect dial={dial} onChange={setDial} label={t.countryLabel} />
+                    <div className="htl-fl" style={{ flex: 1 }}>
+                      <input id="htl-phone" required type="tel" inputMode="tel" placeholder=" " {...f('passenger_phone')} />
+                      <label htmlFor="htl-phone">{t.phone}</label>
+                    </div>
                   </div>
 
-                  <div className="htl-field">
-                    <label className="htl-label">{t.email}</label>
-                    <input className="htl-input" type="email" placeholder={t.emailPh} {...f('passenger_email')} />
+                  <div className="htl-fl">
+                    <input id="htl-email" type="email" placeholder=" " {...f('passenger_email')} />
+                    <label htmlFor="htl-email">{t.email}</label>
                   </div>
 
-                  <div className="htl-field">
-                    <label className="htl-label">{t.vehicle}</label>
-                    <select className="htl-select" required value={form.vehicle} onChange={e => setForm({...form, vehicle: e.target.value})}>
-                      <option value="">{t.selectVehicle}</option>
-                      <option value="Taxi (1-4 Επιβάτες)">{t.taxi}</option>
-                      <option value="Van (5-9 Επιβάτες)">{t.van}</option>
+                  <div className="htl-full">
+                    <div className="htl-caplabel">{t.route}</div>
+                    <div className="htl-route">
+                      <span className="htl-pin p1" /><span className="htl-pin p2" />
+                      <AutocompleteInput id="htl-pickup" label={t.pickup} value={form.pickup} onChange={val => setForm({...form, pickup: val})} />
+                      <AutocompleteInput id="htl-dropoff" label={t.dropoff} value={form.dropoff} onChange={val => setForm({...form, dropoff: val})} />
+                    </div>
+                  </div>
+
+                  <div className="htl-fl htl-always">
+                    <input id="htl-date" required type="date" placeholder=" " {...f('date')} />
+                    <label htmlFor="htl-date">{t.date}</label>
+                  </div>
+
+                  <div className="htl-fl htl-always">
+                    <input id="htl-time" required type="time" placeholder=" " {...f('time')} />
+                    <label htmlFor="htl-time">{t.time}</label>
+                  </div>
+
+                  <div className="htl-full">
+                    <div className="htl-caplabel">{t.vehicle}</div>
+                    <div className="htl-seg" role="group" aria-label={t.vehicle}>
+                      <button type="button" className={`htl-seg-opt${form.vehicle === 'Taxi (1-4 Επιβάτες)' ? ' active' : ''}`}
+                        aria-pressed={form.vehicle === 'Taxi (1-4 Επιβάτες)'}
+                        onClick={() => setForm({ ...form, vehicle: 'Taxi (1-4 Επιβάτες)' })}>🚕 {t.taxiSeg}</button>
+                      <button type="button" className={`htl-seg-opt${form.vehicle === 'Van (5-9 Επιβάτες)' ? ' active' : ''}`}
+                        aria-pressed={form.vehicle === 'Van (5-9 Επιβάτες)'}
+                        onClick={() => setForm({ ...form, vehicle: 'Van (5-9 Επιβάτες)' })}>🚐 {t.vanSeg}</button>
+                    </div>
+                  </div>
+
+                  <div className="htl-fl htl-always">
+                    <select id="htl-luggage" value={form.luggage} onChange={e => setForm({ ...form, luggage: e.target.value })}>
+                      <option value="">{t.luggageSelect}</option>
+                      {t.luggageOpts.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
                     </select>
+                    <label htmlFor="htl-luggage">{t.luggage}</label>
                   </div>
 
-                  <div className="htl-field">
-                    <label className="htl-label">{t.pickup}</label>
-                    <AutocompleteInput
-                      placeholder={t.pickupPh}
-                      value={form.pickup}
-                      onChange={val => setForm({...form, pickup: val})}
-                    />
+                  <div className="htl-fl">
+                    <input id="htl-flight" placeholder=" " {...f('flight_number')} />
+                    <label htmlFor="htl-flight">{t.flight}</label>
                   </div>
 
-                  <div className="htl-field">
-                    <label className="htl-label">{t.dropoff}</label>
-                    <AutocompleteInput
-                      placeholder={t.dropoffPh}
-                      value={form.dropoff}
-                      onChange={val => setForm({...form, dropoff: val})}
-                    />
-                  </div>
-
-                  <div className="htl-field">
-                    <label className="htl-label">{t.date}</label>
-                    <input className="htl-input" required type="date" {...f('date')} />
-                  </div>
-
-                  <div className="htl-field">
-                    <label className="htl-label">{t.time}</label>
-                    <input className="htl-input" required type="time" {...f('time')} />
-                  </div>
-
-                  <div className="htl-field">
-                    <label className="htl-label">{t.flight}</label>
-                    <input className="htl-input" placeholder={t.flightPh} {...f('flight_number')} />
-                  </div>
-
-                  <div className="htl-field">
-                    <label className="htl-label">{t.notes}</label>
-                    <input className="htl-input" placeholder={t.notesPh} {...f('notes')} />
+                  <div className="htl-fl">
+                    <input id="htl-notes" placeholder=" " {...f('notes')} />
+                    <label htmlFor="htl-notes">{t.notes}</label>
                   </div>
 
                   <div className="htl-full">

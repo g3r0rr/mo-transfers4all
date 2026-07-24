@@ -42,12 +42,12 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data ? event.data.json() : {}
   } catch (e) {
-    data = { title: 'New Booking', body: event.data ? event.data.text() : '' }
+    data = { title: 'Νέα Κράτηση', body: event.data ? event.data.text() : '' }
   }
 
-  const title = data.title || 'New Booking — MO Transfers4all'
+  const title = data.title || '🚖 Νέα Κράτηση — MO Transfers4all'
   const options = {
-    body: data.body || 'A new booking has arrived.',
+    body: data.body || 'Έφτασε μια νέα κράτηση.',
     icon: '/logo.jpg',
     badge: '/favicon-32.png',
     data: { url: data.url || '/admin' },
