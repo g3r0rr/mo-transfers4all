@@ -144,17 +144,11 @@ export default function Login() {
           line-height: 1.5;
         }
 
-        .login-label {
-          display: block;
-          font-size: 0.65rem;
-          letter-spacing: 0.2em;
-          text-transform: uppercase;
-          color: var(--blue-mid, #1a5276);
-          font-weight: 600;
-          margin-bottom: 0.45rem;
-        }
-
-        .login-field {
+        /* Floating-label fields: the label sits inside the filled input and
+           animates up to a small caption on focus or once the field has a
+           value (placeholder=" " is what drives :not(:placeholder-shown)). */
+        .login-fl {
+          position: relative;
           margin-bottom: 1.25rem;
         }
 
@@ -162,16 +156,15 @@ export default function Login() {
           width: 100%;
           background: var(--blue-mist, #eef5fb);
           border: 1.5px solid var(--border, #cfe0f0);
-          border-radius: 7px;
+          border-radius: 9px;
           color: var(--text-dark, #0d2236);
           font-family: 'Inter', sans-serif;
           font-size: 0.9rem;
           line-height: 1.4;
-          padding: 0.8rem 1rem;
+          padding: 1.35rem 1rem 0.55rem;
           outline: none;
           transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
           box-sizing: border-box;
-          vertical-align: middle;
         }
 
         .login-input[type="password"] {
@@ -179,14 +172,35 @@ export default function Login() {
           letter-spacing: 0.15em;
         }
 
+        .login-fl > label {
+          position: absolute;
+          left: 1rem;
+          top: 1rem;
+          color: var(--text-light, #7a99b5);
+          font-size: 0.9rem;
+          pointer-events: none;
+          transition: top 0.16s, font-size 0.16s, color 0.16s, letter-spacing 0.16s;
+        }
+
+        .login-input[type="password"] + label {
+          font-family: 'Inter', sans-serif;
+          letter-spacing: 0;
+        }
+
+        .login-fl > input:focus ~ label,
+        .login-fl > input:not(:placeholder-shown) ~ label {
+          top: 0.42rem;
+          font-size: 0.6rem;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          font-weight: 700;
+          color: var(--blue-bright, #2980b9);
+        }
+
         .login-input:focus {
           border-color: var(--blue-bright, #2980b9);
           background: #fff;
           box-shadow: 0 0 0 3px rgba(41,128,185,0.12);
-        }
-
-        .login-input::placeholder {
-          color: var(--text-light, #7a99b5);
         }
 
         .login-error {
@@ -283,28 +297,30 @@ export default function Login() {
               <p className="login-subtitle">{t.subtitle}</p>
 
               <form onSubmit={handleLogin}>
-                <div className="login-field">
-                  <label className="login-label">{t.email}</label>
+                <div className="login-fl">
                   <input
                     className="login-input"
+                    id="login-email"
                     type="email"
                     required
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    placeholder="your@email.com"
+                    placeholder=" "
                   />
+                  <label htmlFor="login-email">{t.email}</label>
                 </div>
 
-                <div className="login-field">
-                  <label className="login-label">{t.password}</label>
+                <div className="login-fl">
                   <input
                     className="login-input"
+                    id="login-password"
                     type="password"
                     required
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    placeholder="••••••••"
+                    placeholder=" "
                   />
+                  <label htmlFor="login-password">{t.password}</label>
                 </div>
 
                 {error && (
