@@ -41,7 +41,7 @@ const translations = {
       { icon: '💳', label: 'Ευέλικτη Πληρωμή', desc: 'Πληρωμή με κάρτα, IRIS ή μετρητά απευθείας στον οδηγό.' },
       { icon: '🔒', label: 'Απόρρητο Δεδομένων', desc: 'Τα δεδομένα σας χρησιμοποιούνται μόνο για αυτή την κράτηση και διαγράφονται μετά.' },
     ],
-    name: 'Ονοματεπώνυμο', phone: 'Τηλέφωνο / WhatsApp', email: 'Email',
+    name: 'Ονοματεπώνυμο', phone: 'Τηλ. / WhatsApp', email: 'Email',
     route: 'Η Διαδρομή σας', pickup: 'Σημείο Παραλαβής', dropoff: 'Προορισμός',
     date: 'Ημερομηνία', time: 'Ώρα', vehicle: 'Όχημα', luggage: 'Αποσκευές',
     notes: 'Αριθμός Πτήσης / Σημειώσεις',
@@ -264,6 +264,11 @@ export default function BookingForm({ lang, prefillPickup, prefillDropoff }) {
           position: absolute; left: 12px; top: 15px; color: var(--text-mid);
           background: #fff; padding: 0 6px; font-size: 0.92rem; pointer-events: none;
           transition: top 0.16s, font-size 0.16s, color 0.16s;
+          /* Never let a long label (e.g. the phone field, narrowed by the
+             country picker) wrap to two lines and overlap the input; clip
+             with an ellipsis instead. */
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          max-width: calc(100% - 18px);
         }
         .bk-fl > input:focus ~ label,
         .bk-fl > input:not(:placeholder-shown) ~ label,
