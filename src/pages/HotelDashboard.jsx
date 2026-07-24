@@ -131,7 +131,7 @@ const T = {
     newBooking: 'Νέα Κράτηση Μεταφοράς',
     newBookingSub: 'Συμπληρώστε τα στοιχεία επιβάτη και τις πληροφορίες μεταφοράς παρακάτω.',
     passengerName: 'Όνομα Επιβάτη *', passengerNamePh: 'Γιάννης Παπαδόπουλος',
-    phone: 'Τηλέφωνο / WhatsApp *', phonePh: '+30 6xx xxx xxxx',
+    phone: 'Τηλ. / WhatsApp *', phonePh: '+30 6xx xxx xxxx',
     email: 'Email', emailPh: 'epibatis@email.com',
     vehicle: 'Όχημα *', selectVehicle: '— Επιλέξτε όχημα —',
     taxi: 'Ταξί — 1 έως 4 Επιβάτες', van: 'Van — 5 έως 9 Επιβάτες',
@@ -469,12 +469,13 @@ export default function HotelDashboard() {
         }
         .htl-fl > label {
           position: absolute; left: 1rem; top: 1rem; color: #7a99b5; font-size: 0.88rem;
-          pointer-events: none; transition: top 0.16s, font-size 0.16s, color 0.16s, letter-spacing 0.16s;
+          pointer-events: none; transition: top 0.16s, font-size 0.16s, color 0.16s;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 1.4rem);
         }
         .htl-fl > input:focus ~ label,
         .htl-fl > input:not(:placeholder-shown) ~ label,
         .htl-fl.htl-always > label {
-          top: 0.4rem; font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700; color: #2980b9;
+          top: 0.4rem; font-size: 0.66rem; font-weight: 700; color: #2980b9;
         }
         .htl-fl > input:focus, .htl-fl > select:focus {
           border-color: #2980b9; background: #fff; box-shadow: 0 0 0 3px rgba(41,128,185,0.12);

@@ -9,6 +9,7 @@ const translations = {
     subtitle: 'Enter your credentials to access the booking portal.',
     email: 'Email',
     password: 'Password',
+    remember: 'Remember me',
     signIn: 'Sign In',
     signingIn: 'Signing in…',
     back: '← Back to website',
@@ -20,6 +21,7 @@ const translations = {
     subtitle: 'Εισάγετε τα στοιχεία σας για πρόσβαση στην πύλη κρατήσεων.',
     email: 'Email',
     password: 'Κωδικός',
+    remember: 'Να με θυμάσαι',
     signIn: 'Σύνδεση',
     signingIn: 'Σύνδεση…',
     back: '← Επιστροφή στην ιστοσελίδα',
@@ -28,7 +30,12 @@ const translations = {
 }
 
 export default function Login() {
-  const [email, setEmail]       = useState('')
+  // "Remember me" defaults on. When on, we prefill the email on the next
+  // visit; when the user turns it off, the saved email is cleared. (The
+  // Supabase session itself already persists — this only controls whether
+  // the email is remembered on this device.)
+  const [remember, setRemember] = useState(() => localStorage.getItem('mo-remember') !== '0')
+  const [email, setEmail]       = useState(() => (localStorage.getItem('mo-remember') !== '0' ? (localStorage.getItem('mo-remember-email') || '') : ''))
   const [password, setPassword] = useState('')
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState(null)
@@ -45,6 +52,11 @@ export default function Login() {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw new Error(error.message)
+
+      // Persist the "remember me" choice + email for next time.
+      localStorage.setItem('mo-remember', remember ? '1' : '0')
+      if (remember) localStorage.setItem('mo-remember-email', email)
+      else localStorage.removeItem('mo-remember-email')
 
       const { data: profile, error: profileError } = await supabase
         .from('profiles').select('role').eq('id', data.user.id).single()
@@ -190,9 +202,7 @@ export default function Login() {
         .login-fl > input:focus ~ label,
         .login-fl > input:not(:placeholder-shown) ~ label {
           top: 0.42rem;
-          font-size: 0.6rem;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
+          font-size: 0.66rem;
           font-weight: 700;
           color: var(--blue-bright, #2980b9);
         }
@@ -201,6 +211,25 @@ export default function Login() {
           border-color: var(--blue-bright, #2980b9);
           background: #fff;
           box-shadow: 0 0 0 3px rgba(41,128,185,0.12);
+        }
+
+        .login-remember {
+          display: flex;
+          align-items: center;
+          gap: 0.55rem;
+          margin: -0.25rem 0 1.4rem;
+          cursor: pointer;
+          font-size: 0.82rem;
+          color: var(--text-mid, #3a5a78);
+          user-select: none;
+        }
+
+        .login-remember input {
+          width: 17px;
+          height: 17px;
+          cursor: pointer;
+          accent-color: var(--blue-bright, #2980b9);
+          flex-shrink: 0;
         }
 
         .login-error {
@@ -322,6 +351,15 @@ export default function Login() {
                   />
                   <label htmlFor="login-password">{t.password}</label>
                 </div>
+
+                <label className="login-remember">
+                  <input
+                    type="checkbox"
+                    checked={remember}
+                    onChange={e => setRemember(e.target.checked)}
+                  />
+                  <span>{t.remember}</span>
+                </label>
 
                 {error && (
                   <div className="login-error">{error}</div>

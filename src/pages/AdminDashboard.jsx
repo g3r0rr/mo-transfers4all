@@ -591,6 +591,33 @@ export default function AdminDashboard() {
           font-weight: 600;
         }
 
+        /* ── Entrance & micro-animations ── */
+        @keyframes adm-fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+        @keyframes adm-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes adm-modal-in { from { opacity: 0; transform: translateY(18px) scale(0.97); } to { opacity: 1; transform: none; } }
+
+        .adm-controls, .adm-cal-card { animation: adm-fade-up 0.45s cubic-bezier(0.22,1,0.36,1) both; }
+        .adm-controls { animation-delay: 0.12s; }
+        .adm-cal-card { animation-delay: 0.18s; }
+
+        /* Stats stagger in on load and lift on hover. Uses 'backwards' fill
+           (not 'both') so the finished animation doesn't pin transform and
+           swallow the hover lift. */
+        .adm-stat { animation: adm-fade-up 0.5s cubic-bezier(0.22,1,0.36,1) backwards; transition: transform 0.18s ease, box-shadow 0.18s ease; }
+        .adm-stat:nth-child(1) { animation-delay: 0.03s; }
+        .adm-stat:nth-child(2) { animation-delay: 0.09s; }
+        .adm-stat:nth-child(3) { animation-delay: 0.15s; }
+        .adm-stat:nth-child(4) { animation-delay: 0.21s; }
+        .adm-stat:nth-child(5) { animation-delay: 0.27s; }
+        .adm-stat:hover { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(15,52,96,0.12); }
+
+        .adm-overlay { animation: adm-overlay-in 0.2s ease both; }
+        .adm-modal { animation: adm-modal-in 0.28s cubic-bezier(0.22,1,0.36,1) both; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .adm-controls, .adm-cal-card, .adm-stat, .adm-overlay, .adm-modal { animation: none !important; }
+        }
+
         /* ── Controls bar ── */
         .adm-controls {
           display: flex;
