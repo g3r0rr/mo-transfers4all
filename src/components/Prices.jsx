@@ -21,8 +21,8 @@ const translations = {
         { route: 'Centre → Parnitha Cable Car', taxi: '€45', van: 'On request', note: '' },
       ],
       port: [
-        { route: 'Centre → Piraeus', taxi: '€30', van: 'On request', note: '' },
-        { route: 'Piraeus → Centre', taxi: '€35', van: 'On request', note: '' },
+        { route: 'Centre → Piraeus', taxi: '€30', van: '€65', note: '' },
+        { route: 'Piraeus → Centre', taxi: '€35', van: '€65', note: '' },
       ],
       local: []
     }
